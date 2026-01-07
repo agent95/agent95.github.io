@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FleetView – Mobile Prototype (Clean)</title>
+  <title>FleetView – Mobile Prototype (Realistic Admin UI)</title>
 
   <!-- Leaflet (map) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -29,7 +29,7 @@
       border:1px solid #1b1f28; position:relative;
     }
 
-    /* Ensure overlays sit above Leaflet */
+    /* overlays above Leaflet */
     .topbar{
       height:70px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between;
       background:linear-gradient(180deg,#0f1726, #0b0f14);
@@ -44,20 +44,16 @@
     .content{position:absolute; top:70px; bottom:78px; left:0; right:0;}
     #map{position:absolute; inset:0; z-index:1;}
 
-    /* Parent bottom sheet (collapsible peek) */
+    /* Parent bottom sheet */
     .sheet{
       position:absolute; left:12px; right:12px; bottom:12px; z-index:6000;
       background:rgba(16,24,38,.96); border:1px solid var(--border); border-radius:18px;
       padding:12px; backdrop-filter: blur(6px);
-
       max-height: 42%;
       overflow:auto;
       transition: transform 180ms ease;
     }
-    .sheet.peek{
-      transform: translateY(calc(100% - 86px)); /* leave header visible */
-      overflow:hidden;
-    }
+    .sheet.peek{ transform: translateY(calc(100% - 86px)); overflow:hidden; }
 
     .row{display:flex; align-items:center; justify-content:space-between; gap:10px}
     .routeTitle{font-size:13px; font-weight:800}
@@ -79,6 +75,7 @@
     button.danger{background:var(--red); border-color:var(--red)}
     button.good{background:rgba(47,202,115,.18); border-color:rgba(47,202,115,.55)}
     button:active{transform:scale(.98)}
+    button:disabled{opacity:.55; cursor:not-allowed}
 
     .bottomnav{
       position:absolute; left:0; right:0; bottom:0; height:78px;
@@ -89,8 +86,7 @@
     .navbtn{
       flex:1; border-radius:16px; padding:12px 10px; text-align:center;
       border:1px solid var(--border); background:rgba(16,24,38,.92);
-      font-size:12px; cursor:pointer;
-      user-select:none;
+      font-size:12px; cursor:pointer; user-select:none;
     }
     .navbtn.active{border-color:var(--blue)}
 
@@ -108,10 +104,78 @@
     .small{font-size:12px}
     .divider{height:1px; background:var(--border); margin:10px 0}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono"; font-size:11px; color:var(--muted)}
-    .handleBar{
-      width:64px; height:6px; border-radius:999px; border:0;
-      background:#2a3f5e; padding:0; cursor:pointer;
+    .handleBar{ width:64px; height:6px; border-radius:999px; border:0; background:#2a3f5e; padding:0; cursor:pointer; }
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+    .chip{font-size:11px; padding:6px 10px; border-radius:999px; border:1px solid var(--border2); background:var(--card2); color:var(--text)}
+    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    .fakeField{
+      background:var(--card2); border:1px solid var(--border); border-radius:14px;
+      padding:10px; font-size:12px; color:var(--muted);
     }
+    .fakeField b{color:var(--text)}
+
+    /* Admin "real app" chrome */
+    .adminHeader{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:10px;
+    }
+    .search{
+      flex:1;
+      background:rgba(15,23,38,.9);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .iconBtn{
+      width:40px; height:40px;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(15,23,38,.9);
+      font-size:16px;
+      cursor:pointer;
+    }
+    .adminTabs{
+      display:flex; gap:8px; overflow:auto; padding-bottom:6px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .adminTabs::-webkit-scrollbar{ display:none; }
+    .tab{
+      white-space:nowrap;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(15,23,38,.65);
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{ border-color: var(--blue); box-shadow:0 0 0 2px rgba(42,114,255,.15) inset; }
+    .tabBadge{
+      margin-left:6px;
+      font-size:11px;
+      padding:2px 7px;
+      border-radius:999px;
+      border:1px solid var(--border2);
+      background:rgba(16,24,38,.9);
+      color:var(--muted);
+    }
+    .ctaRow{display:flex; gap:8px; margin-top:10px}
+    .miniBtn{
+      border:1px solid var(--border2);
+      background:#16243a;
+      color:var(--text);
+      padding:10px 10px;
+      border-radius:12px;
+      font-size:12px;
+      cursor:pointer;
+      flex:1;
+      min-width:0;
+    }
+    .miniBtn.primary{ background:var(--blue); border-color:var(--blue); }
   </style>
 </head>
 
@@ -195,39 +259,247 @@
           </div>
         </div>
 
-        <!-- Admin Panel -->
+        <!-- Admin Panel (Realistic UI with tabs) -->
         <div class="panel" id="adminPanel">
-          <div class="card">
-            <h3>Admin • Routes (Demo)</h3>
-            <ul>
-              <li>
-                <b>Route A – Pembroke → Virginia</b><br/>
-                <span class="muted">Bus 12 • Status: <span id="adminRouteStatus">On time</span></span>
-              </li>
-              <li>
-                <b>Route B – Virginia → Pembroke (AM Pickup)</b><br/>
-                <span class="muted">Bus 12 • Scheduled</span>
-              </li>
-            </ul>
+          <!-- Admin top chrome -->
+          <div class="adminHeader">
+            <div class="search">Search routes, drivers, students… (UI only)</div>
+            <div class="iconBtn" title="Notifications (UI only)">🔔</div>
+            <div class="iconBtn" title="Settings (UI only)">⚙️</div>
           </div>
 
-          <div class="card">
-            <h3>Admin Actions</h3>
-            <div class="btns">
-              <button class="danger" id="sendDelayBtn">Send Delay Alert</button>
-              <button id="sendArriveBtn">Send “Arriving Soon”</button>
+          <div class="adminTabs" id="adminTabs">
+            <div class="tab active" data-tab="overview">Overview</div>
+            <div class="tab" data-tab="routes">Routes <span class="tabBadge">4</span></div>
+            <div class="tab" data-tab="drivers">Drivers <span class="tabBadge">3</span></div>
+            <div class="tab" data-tab="vehicles">Vehicles <span class="tabBadge">2</span></div>
+            <div class="tab" data-tab="parents">Parents <span class="tabBadge">268</span></div>
+            <div class="tab" data-tab="students">Students <span class="tabBadge">312</span></div>
+            <div class="tab" data-tab="reports">Reports</div>
+            <div class="tab" data-tab="settings">Settings</div>
+          </div>
+
+          <!-- Overview -->
+          <div class="adminView" id="view-overview">
+            <div class="card">
+              <h3>Admin • Overview</h3>
+              <div class="chips">
+                <span class="chip">School: Pembroke (Demo)</span>
+                <span class="chip">Active Buses: 2</span>
+                <span class="chip">Routes: 4</span>
+                <span class="chip">Parents: 268</span>
+              </div>
+              <div class="divider"></div>
+              <div class="grid2">
+                <div class="fakeField"><b>Today</b><br/>Afternoon Drop-off</div>
+                <div class="fakeField"><b>Open Alerts</b><br/>0 unresolved</div>
+              </div>
+              <div class="ctaRow">
+                <button class="miniBtn primary" disabled title="UI only">Create Route</button>
+                <button class="miniBtn" disabled title="UI only">Invite Driver</button>
+              </div>
+              <div class="muted small" style="margin-top:8px">
+                (UI only) In production, these actions are role-based and audited.
+              </div>
             </div>
-            <div class="btns">
-              <button id="resetBtn">Reset Demo</button>
+
+            <div class="card">
+              <h3>Quick Actions (Functional for demo)</h3>
+              <div class="btns">
+                <button class="danger" id="sendDelayBtn">Send Delay Alert</button>
+                <button id="sendArriveBtn">Send “Arriving Soon”</button>
+              </div>
+              <div class="btns">
+                <button id="resetBtn">Reset Demo</button>
+              </div>
+              <div class="mono" style="margin-top:8px">
+                In production: alerts are logged, with templates and approval rules.
+              </div>
             </div>
-            <div class="mono" style="margin-top:8px">
-              In production: alerts are role-based and logged.
+
+            <div class="card">
+              <h3>Notifications (Demo)</h3>
+              <ul id="notifList"></ul>
             </div>
           </div>
 
-          <div class="card">
-            <h3>Notifications (Demo)</h3>
-            <ul id="notifList"></ul>
+          <!-- Routes -->
+          <div class="adminView" id="view-routes" style="display:none">
+            <div class="card">
+              <h3>Manage Routes</h3>
+              <ul>
+                <li>
+                  <div class="row">
+                    <div>
+                      <b>Route A – Pembroke → Virginia</b><br/>
+                      <span class="muted">Bus 12 • Status: <span id="adminRouteStatus">On time</span></span>
+                    </div>
+                    <span class="tag ok">Active</span>
+                  </div>
+                  <div class="chips">
+                    <span class="chip">Stops: 7</span>
+                    <span class="chip">Window: 3:20–4:05</span>
+                    <span class="chip">Students: 42</span>
+                  </div>
+                </li>
+
+                <li>
+                  <div class="row">
+                    <div>
+                      <b>Route B – Virginia → Pembroke (AM Pickup)</b><br/>
+                      <span class="muted">Bus 12 • Scheduled • 7:10–8:00</span>
+                    </div>
+                    <span class="tag">Scheduled</span>
+                  </div>
+                  <div class="chips">
+                    <span class="chip">Stops: 6</span>
+                    <span class="chip">Students: 39</span>
+                  </div>
+                </li>
+
+                <li>
+                  <div class="row">
+                    <div>
+                      <b>Route C – East Suburbs Loop</b><br/>
+                      <span class="muted">Bus 08 • Active • 3:15–3:55</span>
+                    </div>
+                    <span class="tag ok">Active</span>
+                  </div>
+                  <div class="chips">
+                    <span class="chip">Students: 31</span>
+                    <span class="chip">Stops: 9</span>
+                  </div>
+                </li>
+
+                <li>
+                  <div class="row">
+                    <div>
+                      <b>Route D – Late Activity Bus</b><br/>
+                      <span class="muted">Bus 05 • Draft</span>
+                    </div>
+                    <span class="tag">Draft</span>
+                  </div>
+                  <div class="chips">
+                    <span class="chip">Not published</span>
+                  </div>
+                </li>
+              </ul>
+
+              <div class="btns">
+                <button disabled title="UI only">Add Route</button>
+                <button disabled title="UI only">Edit Stops</button>
+              </div>
+
+              <div class="muted small" style="margin-top:8px">
+                (UI only) Create routes, define stops, set pickup/drop windows, assign buses and drivers.
+              </div>
+            </div>
+          </div>
+
+          <!-- Drivers -->
+          <div class="adminView" id="view-drivers" style="display:none">
+            <div class="card">
+              <h3>Driver Onboarding</h3>
+              <div class="fakeField"><b>Invite Driver</b><br/>Name, phone/email, assigned bus & route</div>
+              <div class="btns">
+                <button disabled title="UI only">Send Invite</button>
+                <button disabled title="UI only">Upload Driver List</button>
+              </div>
+              <div class="divider"></div>
+              <h3 style="margin-top:0">Drivers</h3>
+              <ul>
+                <li><b>Sam K.</b><br/><span class="muted">Bus 12 • Verified • Last seen: 3:28 PM</span></li>
+                <li><b>Linda M.</b><br/><span class="muted">Bus 08 • Pending invite</span></li>
+                <li><b>Mark T.</b><br/><span class="muted">Relief driver • Not assigned</span></li>
+              </ul>
+              <div class="muted small" style="margin-top:8px">
+                (UI only) In production: drivers sign in with a secure invite and device pairing.
+              </div>
+            </div>
+          </div>
+
+          <!-- Vehicles -->
+          <div class="adminView" id="view-vehicles" style="display:none">
+            <div class="card">
+              <h3>Vehicles</h3>
+              <ul>
+                <li><b>Bus 12</b><br/><span class="muted">Assigned: Route A/B • GPS: Active • Last service: 14 days ago</span></li>
+                <li><b>Bus 08</b><br/><span class="muted">Assigned: Route C • GPS: Active • Last service: 21 days ago</span></li>
+              </ul>
+              <div class="btns">
+                <button disabled title="UI only">Add Vehicle</button>
+                <button disabled title="UI only">Assign GPS Device</button>
+              </div>
+              <div class="muted small" style="margin-top:8px">(UI only) Track devices, compliance, and maintenance reminders.</div>
+            </div>
+          </div>
+
+          <!-- Parents -->
+          <div class="adminView" id="view-parents" style="display:none">
+            <div class="card">
+              <h3>Parents</h3>
+              <div class="fakeField"><b>Bulk Onboarding</b><br/>Upload list or sync from school system (UI only)</div>
+              <div class="btns">
+                <button disabled title="UI only">Upload CSV</button>
+                <button disabled title="UI only">Send Welcome Messages</button>
+              </div>
+              <div class="divider"></div>
+              <ul>
+                <li><b>Roy M.</b><br/><span class="muted">Child: Roy Jr • Route A • Notifications: On</span></li>
+                <li><b>Alex P.</b><br/><span class="muted">Child: Mia P. • Route C • Notifications: On</span></li>
+                <li><b>Jamie L.</b><br/><span class="muted">Child: Noah L. • Route B • Notifications: Off</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Students -->
+          <div class="adminView" id="view-students" style="display:none">
+            <div class="card">
+              <h3>Students</h3>
+              <div class="fakeField"><b>Roster Management</b><br/>Assign students to routes and stops (UI only)</div>
+              <div class="btns">
+                <button disabled title="UI only">Import Roster</button>
+                <button disabled title="UI only">Assign Stops</button>
+              </div>
+              <div class="divider"></div>
+              <ul>
+                <li><b>Roy Jr</b><br/><span class="muted">Route A • Stop: Virginia • Status: Active</span></li>
+                <li><b>Mia P.</b><br/><span class="muted">Route C • Stop: Norwood • Status: Active</span></li>
+                <li><b>Noah L.</b><br/><span class="muted">Route B • Stop: Salisbury • Status: Active</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Reports -->
+          <div class="adminView" id="view-reports" style="display:none">
+            <div class="card">
+              <h3>Reports</h3>
+              <ul>
+                <li><b>On-time performance</b><br/><span class="muted">By route, week, and term (UI only)</span></li>
+                <li><b>Parent engagement</b><br/><span class="muted">Notification opens & app usage (UI only)</span></li>
+                <li><b>Incidents</b><br/><span class="muted">Driver reports and resolutions (UI only)</span></li>
+              </ul>
+              <div class="btns">
+                <button disabled title="UI only">Export PDF</button>
+                <button disabled title="UI only">Export CSV</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="adminView" id="view-settings" style="display:none">
+            <div class="card">
+              <h3>Settings</h3>
+              <ul>
+                <li><b>Notification templates</b><br/><span class="muted">Delay, arriving soon, cancellation (UI only)</span></li>
+                <li><b>Roles and permissions</b><br/><span class="muted">Admin, dispatcher, driver (UI only)</span></li>
+                <li><b>Branding</b><br/><span class="muted">School logo and colors (UI only)</span></li>
+              </ul>
+              <div class="btns">
+                <button disabled title="UI only">Manage Roles</button>
+                <button disabled title="UI only">Edit Templates</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -257,8 +529,6 @@
   const departLabel = "3:20 PM";
   const arriveLabel = "4:05 PM";
   const totalMinutes = 45;
-
-  // Simulation speed: 1 demo minute per 1.2s
   const msPerDemoMinute = 1200;
 
   // UI refs
@@ -284,7 +554,6 @@
     li.innerHTML = `<b>${title}</b><br/><span class="muted">${msg}</span>`;
     notifList.prepend(li);
   };
-
   const logDriver = (msg) => {
     const li = document.createElement("li");
     li.innerHTML = `<b>${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</b><br/><span class="muted">${msg}</span>`;
@@ -318,14 +587,13 @@
 
   // Simulation state
   let delayed = false;
-  let tripRunning = true;  // auto-start demo
+  let tripRunning = true;
   let tripPaused = false;
-
-  let t = 0;          // 0..1 progress
-  let demoMinute = 0; // 0..totalMinutes
+  let t = 0;
+  let demoMinute = 0;
 
   function formatDemoClock(minFromStart){
-    const baseH = 15, baseM = 20; // 3:20 PM
+    const baseH = 15, baseM = 20;
     const total = baseH*60 + baseM + minFromStart;
     const h24 = Math.floor(total/60) % 24;
     const m = total % 60;
@@ -439,18 +707,15 @@
   driverTripTag.className = "tag ok";
   driverStatus.textContent = `In progress • Departed ${departLabel}`;
   updateUI();
-
   const timer = setInterval(moveBusStep, msPerDemoMinute);
 
-  // Bottom sheet toggle
+  // Parent sheet toggle
   const parentSheetEl = document.getElementById("parentSheet");
   document.getElementById("sheetToggle").onclick = () => parentSheetEl.classList.toggle("peek");
   parentSheetEl.addEventListener("dblclick", () => parentSheetEl.classList.toggle("peek"));
 
-  // Admin actions
-  document.getElementById("sendDelayBtn").onclick = () => {
-    if (!delayed) setDelay(true, "roadworks on Main North Rd");
-  };
+  // Admin actions (demo)
+  document.getElementById("sendDelayBtn").onclick = () => { if (!delayed) setDelay(true, "roadworks on Main North Rd"); };
   document.getElementById("sendArriveBtn").onclick = () => addNotif("Arriving Soon", "Bus 12 arriving soon (demo).");
   document.getElementById("resetBtn").onclick = () => location.reload();
 
@@ -507,14 +772,32 @@
     subTitle.textContent =
       mode==="parent" ? "Parent • Roy Jr • Bus 12 • Pembroke → Virginia" :
       mode==="driver" ? "Driver • Bus 12 • Trip Control" :
-      "Admin • Route Operations";
+      "Admin • Dispatch Console";
   }
-
   navParent.onclick = () => show("parent");
   navDriver.onclick = () => show("driver");
   navAdmin.onclick  = () => show("admin");
-
   show("parent");
+
+  // Admin tabs: show different UI panels (non-functional data, but realistic navigation)
+  const tabs = document.querySelectorAll(".tab");
+  const views = {
+    overview: document.getElementById("view-overview"),
+    routes: document.getElementById("view-routes"),
+    drivers: document.getElementById("view-drivers"),
+    vehicles: document.getElementById("view-vehicles"),
+    parents: document.getElementById("view-parents"),
+    students: document.getElementById("view-students"),
+    reports: document.getElementById("view-reports"),
+    settings: document.getElementById("view-settings")
+  };
+  function showAdminTab(key){
+    Object.values(views).forEach(v => v.style.display = "none");
+    views[key].style.display = "block";
+    tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === key));
+  }
+  tabs.forEach(t => t.addEventListener("click", () => showAdminTab(t.dataset.tab)));
+  showAdminTab("overview");
 </script>
 </body>
 </html>

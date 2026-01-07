@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FleetView – Mobile Prototype (Clean)</title>
+
+  <!-- Leaflet (map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#101826; --card2:#0f1726;
+      --border:#1d2c45; --border2:#2a3f5e;
+      --text:#e9eef5; --muted:#9fb2cc;
+      --blue:#2a72ff; --green:#2fca73; --yellow:#ffcc00; --red:#ff4d4d;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .stage{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:18px}
+    .phone{
+      width:390px; max-width:95vw; height:844px; max-height:92vh;
+      background:#05070a; border:1px solid #222; border-radius:34px; padding:12px;
+      box-shadow:0 20px 60px rgba(0,0,0,.55);
+    }
+    .screen{
+      height:100%; background:var(--bg); border-radius:26px; overflow:hidden;
+      border:1px solid #1b1f28; position:relative;
+    }
+
+    /* Ensure overlays sit above Leaflet */
+    .topbar{
+      height:70px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between;
+      background:linear-gradient(180deg,#0f1726, #0b0f14);
+      border-bottom:1px solid var(--border);
+      position:relative; z-index:7000;
+    }
+    .brand{display:flex; flex-direction:column; gap:2px}
+    .brand b{font-size:14px; letter-spacing:.2px}
+    .brand span{font-size:11px; color:var(--muted)}
+    .pill{font-size:11px; padding:6px 10px; border-radius:999px; background:#142238; border:1px solid var(--border2)}
+
+    .content{position:absolute; top:70px; bottom:78px; left:0; right:0;}
+    #map{position:absolute; inset:0; z-index:1;}
+
+    /* Parent bottom sheet (collapsible peek) */
+    .sheet{
+      position:absolute; left:12px; right:12px; bottom:12px; z-index:6000;
+      background:rgba(16,24,38,.96); border:1px solid var(--border); border-radius:18px;
+      padding:12px; backdrop-filter: blur(6px);
+
+      max-height: 42%;
+      overflow:auto;
+      transition: transform 180ms ease;
+    }
+    .sheet.peek{
+      transform: translateY(calc(100% - 86px)); /* leave header visible */
+      overflow:hidden;
+    }
+
+    .row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .routeTitle{font-size:13px; font-weight:800}
+    .muted{color:var(--muted); font-size:11px}
+    .kvs{display:grid; grid-template-columns: 120px 1fr; gap:6px 10px; margin-top:10px; font-size:12px}
+    .k{color:var(--muted)}
+    .tag{display:inline-block; font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid var(--border2); background:var(--card2)}
+    .tag.ok{border-color:var(--green)}
+    .tag.warn{border-color:var(--yellow)}
+    .tag.bad{border-color:var(--red)}
+
+    .btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    button{
+      border:1px solid var(--border2); background:#16243a; color:var(--text);
+      padding:10px 10px; border-radius:12px; font-size:12px; cursor:pointer;
+      flex:1; min-width:110px;
+    }
+    button.primary{background:var(--blue); border-color:var(--blue)}
+    button.danger{background:var(--red); border-color:var(--red)}
+    button.good{background:rgba(47,202,115,.18); border-color:rgba(47,202,115,.55)}
+    button:active{transform:scale(.98)}
+
+    .bottomnav{
+      position:absolute; left:0; right:0; bottom:0; height:78px;
+      background:linear-gradient(180deg, rgba(11,15,20,0), rgba(11,15,20,1) 30%);
+      display:flex; gap:10px; padding:14px 14px 18px; align-items:flex-end; justify-content:space-between;
+      z-index:8000;
+    }
+    .navbtn{
+      flex:1; border-radius:16px; padding:12px 10px; text-align:center;
+      border:1px solid var(--border); background:rgba(16,24,38,.92);
+      font-size:12px; cursor:pointer;
+      user-select:none;
+    }
+    .navbtn.active{border-color:var(--blue)}
+
+    .panel{
+      position:absolute; top:70px; bottom:78px; left:0; right:0;
+      background:var(--bg);
+      z-index:5000;
+      display:none;
+      padding:12px; overflow:auto;
+    }
+    .card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:12px; margin-bottom:10px}
+    h3{margin:0 0 8px 0; font-size:13px; color:#b8c7dd}
+    ul{list-style:none; margin:0; padding:0}
+    li{background:var(--card2); border:1px solid var(--border); border-radius:14px; padding:10px; margin-bottom:8px}
+    .small{font-size:12px}
+    .divider{height:1px; background:var(--border); margin:10px 0}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono"; font-size:11px; color:var(--muted)}
+    .handleBar{
+      width:64px; height:6px; border-radius:999px; border:0;
+      background:#2a3f5e; padding:0; cursor:pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+        <div class="topbar">
+          <div class="brand">
+            <b>FleetView</b>
+            <span id="subTitle">Parent • Roy Jr • Bus 12 • Pembroke → Virginia</span>
+          </div>
+          <div class="pill" id="statusPill">On time</div>
+        </div>
+
+        <div class="content">
+          <div id="map"></div>
+
+          <!-- Parent Bottom Sheet (no buttons) -->
+          <div class="sheet peek" id="parentSheet">
+            <div style="display:flex; justify-content:center; margin-bottom:10px;">
+              <button class="handleBar" id="sheetToggle" aria-label="Expand/collapse"></button>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="routeTitle">Roy Jr • Bus 12 • Pembroke → Virginia</div>
+                <div class="muted" id="progressText">Depart 3:20 PM • Next: Norwood • Moving</div>
+              </div>
+              <div class="tag ok" id="statusTag">On time</div>
+            </div>
+
+            <div class="kvs">
+              <div class="k">Current time</div><div class="v"><b id="clockText">—</b> <span class="muted">(simulated)</span></div>
+              <div class="k">ETA to Virginia</div><div class="v"><b id="etaText">—</b> <span class="muted">(demo)</span></div>
+              <div class="k">Next stop</div><div class="v" id="nextStopText">—</div>
+              <div class="k">Last update</div><div class="v" id="lastUpdate">—</div>
+              <div class="k">Access</div><div class="v">School-controlled parent access</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver Panel -->
+        <div class="panel" id="driverPanel">
+          <div class="card">
+            <h3>Driver • Trip Control</h3>
+            <div class="row">
+              <div>
+                <div style="font-weight:800">Bus 12</div>
+                <div class="muted">Route: Pembroke → Virginia</div>
+              </div>
+              <div class="tag ok" id="driverTripTag">In Progress</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="kvs">
+              <div class="k">Trip status</div><div class="v" id="driverStatus">In progress • Departed 3:20 PM</div>
+              <div class="k">Next stop</div><div class="v" id="driverNextStop">—</div>
+              <div class="k">Speed</div><div class="v"><span id="driverSpeed">0</span> km/h (demo)</div>
+              <div class="k">Clock</div><div class="v"><b id="driverClock">—</b></div>
+            </div>
+
+            <div class="btns" style="margin-top:12px">
+              <button id="pauseTripBtn">Pause / Resume</button>
+              <button class="danger" id="issueBtn">Report Issue</button>
+            </div>
+
+            <div class="btns">
+              <button class="primary" id="endTripBtn">End Trip</button>
+            </div>
+
+            <div class="muted small" style="margin-top:8px">
+              Demo: “Report Issue” triggers an admin alert and updates ETA.
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Driver Log (Demo)</h3>
+            <ul id="driverLog"></ul>
+          </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div class="panel" id="adminPanel">
+          <div class="card">
+            <h3>Admin • Routes (Demo)</h3>
+            <ul>
+              <li>
+                <b>Route A – Pembroke → Virginia</b><br/>
+                <span class="muted">Bus 12 • Status: <span id="adminRouteStatus">On time</span></span>
+              </li>
+              <li>
+                <b>Route B – Virginia → Pembroke (AM Pickup)</b><br/>
+                <span class="muted">Bus 12 • Scheduled</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Admin Actions</h3>
+            <div class="btns">
+              <button class="danger" id="sendDelayBtn">Send Delay Alert</button>
+              <button id="sendArriveBtn">Send “Arriving Soon”</button>
+            </div>
+            <div class="btns">
+              <button id="resetBtn">Reset Demo</button>
+            </div>
+            <div class="mono" style="margin-top:8px">
+              In production: alerts are role-based and logged.
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Notifications (Demo)</h3>
+            <ul id="notifList"></ul>
+          </div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="bottomnav">
+          <div class="navbtn active" id="navParent">Parent</div>
+          <div class="navbtn" id="navDriver">Driver</div>
+          <div class="navbtn" id="navAdmin">Admin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Stops (approx suburb centres for realism)
+  const stops = [
+    { name: "Pembroke School (Kensington Park)", lat: -34.92086, lng: 138.65068 },
+    { name: "Norwood",   lat: -34.9213, lng: 138.6321 },
+    { name: "Prospect",  lat: -34.8833, lng: 138.6000 },
+    { name: "Enfield",   lat: -34.8606, lng: 138.6054 },
+    { name: "Gepps Cross", lat: -34.8424, lng: 138.6044 },
+    { name: "Salisbury", lat: -34.7640, lng: 138.6419 },
+    { name: "Virginia (SA)", lat: -34.6680, lng: 138.5610 }
+  ];
+
+  // Timing (afternoon run)
+  const departLabel = "3:20 PM";
+  const arriveLabel = "4:05 PM";
+  const totalMinutes = 45;
+
+  // Simulation speed: 1 demo minute per 1.2s
+  const msPerDemoMinute = 1200;
+
+  // UI refs
+  const statusPill = document.getElementById("statusPill");
+  const statusTag  = document.getElementById("statusTag");
+  const etaText    = document.getElementById("etaText");
+  const lastUpdate = document.getElementById("lastUpdate");
+  const progressText = document.getElementById("progressText");
+  const nextStopText = document.getElementById("nextStopText");
+  const clockText = document.getElementById("clockText");
+  const adminRouteStatus = document.getElementById("adminRouteStatus");
+
+  const driverTripTag = document.getElementById("driverTripTag");
+  const driverStatus = document.getElementById("driverStatus");
+  const driverNextStop = document.getElementById("driverNextStop");
+  const driverSpeed = document.getElementById("driverSpeed");
+  const driverClock = document.getElementById("driverClock");
+  const driverLog = document.getElementById("driverLog");
+
+  const notifList = document.getElementById("notifList");
+  const addNotif = (title, msg) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<b>${title}</b><br/><span class="muted">${msg}</span>`;
+    notifList.prepend(li);
+  };
+
+  const logDriver = (msg) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<b>${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</b><br/><span class="muted">${msg}</span>`;
+    driverLog.prepend(li);
+  };
+
+  addNotif("Welcome", "Tracking enabled for Roy Jr (demo route: Pembroke → Virginia).");
+  logDriver("Trip auto-started for demo.");
+
+  // Map
+  const map = L.map("map", { zoomControl:false }).setView([stops[0].lat, stops[0].lng], 11);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors"
+  }).addTo(map);
+
+  const routeLine = L.polyline(stops.map(s => [s.lat, s.lng]), { weight:6 }).addTo(map);
+  map.fitBounds(routeLine.getBounds(), { padding:[30,30] });
+
+  stops.forEach((s, idx) => {
+    L.circleMarker([s.lat, s.lng], { radius:5, weight:1 }).addTo(map)
+      .bindTooltip((idx===0 ? "Start: " : idx===stops.length-1 ? "End: " : "Stop: ") + s.name, { direction:"top" });
+  });
+
+  const busIcon = L.divIcon({
+    className: "",
+    html: `<div style="width:18px;height:18px;border-radius:8px;background:#2a72ff;border:2px solid #cfe0ff;box-shadow:0 6px 18px rgba(42,114,255,.35);"></div>`,
+    iconSize: [18,18],
+    iconAnchor:[9,9]
+  });
+  const busMarker = L.marker([stops[0].lat, stops[0].lng], { icon: busIcon }).addTo(map);
+
+  // Simulation state
+  let delayed = false;
+  let tripRunning = true;  // auto-start demo
+  let tripPaused = false;
+
+  let t = 0;          // 0..1 progress
+  let demoMinute = 0; // 0..totalMinutes
+
+  function formatDemoClock(minFromStart){
+    const baseH = 15, baseM = 20; // 3:20 PM
+    const total = baseH*60 + baseM + minFromStart;
+    const h24 = Math.floor(total/60) % 24;
+    const m = total % 60;
+    const ampm = h24 >= 12 ? "PM" : "AM";
+    const h12 = ((h24 + 11) % 12) + 1;
+    return `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
+  }
+  function nowStamp(){
+    return new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+  }
+  function lerp(a,b,x){ return a + (b-a)*x; }
+
+  function currentStopIndex(){
+    const segments = stops.length - 1;
+    return Math.min(segments - 1, Math.floor(t * segments));
+  }
+  function nextStopName(){
+    const idx = currentStopIndex();
+    return stops[idx + 1]?.name || stops[stops.length-1].name;
+  }
+  function calcEtaMinutes(){
+    const remaining = Math.max(1, (totalMinutes - demoMinute));
+    return remaining + (delayed ? 8 : 0);
+  }
+  function calcSpeedKmh(){
+    if (!tripRunning || tripPaused) return 0;
+    const base = delayed ? 35 : 48;
+    const noise = Math.round((Math.sin(t * 18) + 1) * 8);
+    return Math.min(70, Math.max(15, base + noise));
+  }
+
+  function setDelay(flag, reason){
+    delayed = flag;
+    const label = flag ? "Delayed" : "On time";
+
+    statusPill.textContent = label;
+    statusTag.textContent = label;
+    adminRouteStatus.textContent = label;
+
+    statusPill.style.background = flag ? "#3a2f14" : "#142238";
+    statusPill.style.borderColor = flag ? "#ffcc00" : "#2a3f5e";
+
+    statusTag.classList.toggle("warn", flag);
+    statusTag.classList.toggle("ok", !flag);
+
+    addNotif(flag ? "Delay Notice" : "Update",
+      flag
+        ? `Bus 12 delayed: ${reason || "traffic"} (demo). ETA updated.`
+        : "Bus 12 is back on schedule (demo)."
+    );
+  }
+
+  function updateUI(){
+    etaText.textContent = `${calcEtaMinutes()} min`;
+    lastUpdate.textContent = nowStamp();
+    nextStopText.textContent = nextStopName();
+
+    clockText.textContent = formatDemoClock(demoMinute);
+    driverClock.textContent = formatDemoClock(demoMinute);
+    driverNextStop.textContent = nextStopName();
+    driverSpeed.textContent = String(calcSpeedKmh());
+
+    const movingLabel =
+      (!tripRunning) ? "Not started" :
+      (tripPaused) ? "Paused" :
+      (t >= 1) ? "Arrived" :
+      "Moving";
+
+    progressText.textContent = `Depart ${departLabel} • Next: ${nextStopName().split(" (")[0]} • ${movingLabel}`;
+  }
+
+  function moveBusStep(){
+    if (!tripRunning || tripPaused) { updateUI(); return; }
+
+    const baseStep = 1 / (totalMinutes);
+    const step = delayed ? baseStep * 0.75 : baseStep;
+
+    demoMinute = Math.min(totalMinutes, demoMinute + 1);
+    t = Math.min(1, t + step);
+
+    const segments = stops.length - 1;
+    const segFloat = t * segments;
+    const segIdx = Math.min(segments - 1, Math.floor(segFloat));
+    const segT = segFloat - segIdx;
+
+    const a = stops[segIdx];
+    const b = stops[segIdx + 1];
+
+    const lat = lerp(a.lat, b.lat, segT);
+    const lng = lerp(a.lng, b.lng, segT);
+
+    busMarker.setLatLng([lat, lng]);
+    updateUI();
+
+    if (demoMinute >= totalMinutes || t >= 1){
+      tripRunning = false;
+      tripPaused = false;
+
+      driverTripTag.textContent = "Completed";
+      driverTripTag.className = "tag ok";
+      driverStatus.textContent = `Completed • Arrived ${arriveLabel}`;
+
+      addNotif("Arrived", `Bus 12 arrived in Virginia (demo) at ${arriveLabel}.`);
+      logDriver("Trip completed. Ended successfully.");
+      clearInterval(timer);
+    }
+  }
+
+  // Start demo
+  driverTripTag.textContent = "In Progress";
+  driverTripTag.className = "tag ok";
+  driverStatus.textContent = `In progress • Departed ${departLabel}`;
+  updateUI();
+
+  const timer = setInterval(moveBusStep, msPerDemoMinute);
+
+  // Bottom sheet toggle
+  const parentSheetEl = document.getElementById("parentSheet");
+  document.getElementById("sheetToggle").onclick = () => parentSheetEl.classList.toggle("peek");
+  parentSheetEl.addEventListener("dblclick", () => parentSheetEl.classList.toggle("peek"));
+
+  // Admin actions
+  document.getElementById("sendDelayBtn").onclick = () => {
+    if (!delayed) setDelay(true, "roadworks on Main North Rd");
+  };
+  document.getElementById("sendArriveBtn").onclick = () => addNotif("Arriving Soon", "Bus 12 arriving soon (demo).");
+  document.getElementById("resetBtn").onclick = () => location.reload();
+
+  // Driver controls
+  document.getElementById("pauseTripBtn").onclick = () => {
+    if (!tripRunning) return;
+    tripPaused = !tripPaused;
+    driverTripTag.textContent = tripPaused ? "Paused" : "In Progress";
+    driverTripTag.className = tripPaused ? "tag warn" : (delayed ? "tag warn" : "tag ok");
+    driverStatus.textContent = tripPaused ? "Paused (driver)" : "In progress";
+    addNotif("Status Update", tripPaused ? "Bus 12 paused briefly (demo)." : "Bus 12 resumed (demo).");
+    logDriver(tripPaused ? "Paused trip." : "Resumed trip.");
+    updateUI();
+  };
+
+  document.getElementById("issueBtn").onclick = () => {
+    addNotif("Driver Report", "Driver reported: congestion / roadworks (demo).");
+    logDriver("Reported issue: congestion / roadworks.");
+    if (!delayed) setDelay(true, "congestion reported by driver");
+    driverTripTag.textContent = "Attention";
+    driverTripTag.className = "tag warn";
+    driverStatus.textContent = "Issue reported • Admin notified";
+    updateUI();
+  };
+
+  document.getElementById("endTripBtn").onclick = () => {
+    tripRunning = false;
+    tripPaused = false;
+    driverTripTag.textContent = "Ended";
+    driverTripTag.className = "tag bad";
+    driverStatus.textContent = "Ended by driver (demo)";
+    addNotif("Trip Ended", "Trip ended by driver (demo).");
+    logDriver("Ended trip manually.");
+    updateUI();
+  };
+
+  // Navigation
+  const navParent = document.getElementById("navParent");
+  const navDriver = document.getElementById("navDriver");
+  const navAdmin  = document.getElementById("navAdmin");
+  const adminPanel = document.getElementById("adminPanel");
+  const driverPanel = document.getElementById("driverPanel");
+  const subTitle = document.getElementById("subTitle");
+
+  function show(mode){
+    navParent.classList.toggle("active", mode==="parent");
+    navDriver.classList.toggle("active", mode==="driver");
+    navAdmin.classList.toggle("active", mode==="admin");
+
+    adminPanel.style.display = (mode==="admin") ? "block" : "none";
+    driverPanel.style.display = (mode==="driver") ? "block" : "none";
+    parentSheetEl.style.display = (mode==="parent") ? "block" : "none";
+
+    subTitle.textContent =
+      mode==="parent" ? "Parent • Roy Jr • Bus 12 • Pembroke → Virginia" :
+      mode==="driver" ? "Driver • Bus 12 • Trip Control" :
+      "Admin • Route Operations";
+  }
+
+  navParent.onclick = () => show("parent");
+  navDriver.onclick = () => show("driver");
+  navAdmin.onclick  = () => show("admin");
+
+  show("parent");
+</script>
+</body>
+</html>

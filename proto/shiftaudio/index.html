@@ -1,0 +1,1486 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shift Audio — MVP Demo Prototype</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#101935;
+      --panel2:#0f1730;
+      --text:#e8ecff;
+      --muted:#aab3da;
+      --muted2:#7f89b7;
+      --border:rgba(255,255,255,.08);
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius:18px;
+      --radius2:14px;
+      --pad:16px;
+      --good:#2dd4bf;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --brand:#7c3aed;
+      --brand2:#06b6d4;
+      --chip:rgba(124,58,237,.18);
+      --chip2:rgba(6,182,212,.15);
+      --focus: rgba(124,58,237,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(124,58,237,.35), transparent 60%),
+                  radial-gradient(900px 600px at 90% 0%, rgba(6,182,212,.22), transparent 55%),
+                  radial-gradient(1200px 900px at 50% 120%, rgba(45,212,191,.14), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    a{color:inherit}
+    .app{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      min-height:100vh;
+    }
+    @media (max-width: 980px){
+      .app{grid-template-columns: 1fr;}
+      .sidebar{position:sticky; top:0; z-index:50}
+      .sidebar .nav{display:none}
+      .sidebar .mobileNav{display:flex}
+    }
+
+    .sidebar{
+      border-right:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(16,25,53,.85), rgba(11,16,32,.65));
+      backdrop-filter: blur(10px);
+      padding:18px;
+    }
+    .brandRow{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 10px 12px;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, rgba(124,58,237,.18), rgba(16,25,53,.75));
+    }
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, rgba(6,182,212,.9), rgba(124,58,237,.85));
+      box-shadow: 0 16px 40px rgba(124,58,237,.25);
+      position:relative;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:12px;
+      border-radius:10px;
+      background: rgba(11,16,32,.55);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .brandText{display:flex; flex-direction:column; gap:2px;}
+    .brandText b{font-size:14px; letter-spacing:.2px}
+    .brandText span{font-size:12px; color:var(--muted)}
+    .pill{
+      font-size:11px; padding:6px 9px; border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .nav{
+      margin-top:14px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .nav button{
+      width:100%;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:12px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      transition: transform .08s ease, background .12s ease, border-color .12s ease;
+    }
+    .nav button:hover{transform: translateY(-1px); background: rgba(255,255,255,.06);}
+    .nav button.active{
+      border-color: rgba(124,58,237,.55);
+      background: linear-gradient(90deg, rgba(124,58,237,.20), rgba(6,182,212,.10));
+      box-shadow: 0 18px 50px rgba(124,58,237,.12);
+    }
+    .nav .left{display:flex; align-items:center; gap:10px}
+    .icon{
+      width:26px; height:26px; border-radius:10px;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      display:grid; place-items:center;
+      font-size:13px;
+    }
+    .metaSmall{font-size:12px; color:var(--muted)}
+    .mobileNav{
+      margin-top:12px;
+      display:none;
+      gap:10px;
+      align-items:center;
+    }
+    .mobileNav select{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      outline:none;
+    }
+
+    .content{
+      padding:22px;
+    }
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .titleBlock h1{
+      margin:0;
+      font-size:20px;
+      letter-spacing:.2px;
+    }
+    .titleBlock p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      max-width:70ch;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      transition: transform .08s ease, background .12s ease, border-color .12s ease;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.07);}
+    .btn.primary{
+      background: linear-gradient(90deg, rgba(124,58,237,.65), rgba(6,182,212,.45));
+      border-color: rgba(255,255,255,.12);
+      box-shadow: 0 18px 50px rgba(124,58,237,.18);
+    }
+    .btn.danger{
+      background: rgba(251,113,133,.14);
+      border-color: rgba(251,113,133,.35);
+    }
+    .search{
+      min-width:260px;
+      flex:1;
+      max-width:420px;
+      position:relative;
+    }
+    .search input{
+      width:100%;
+      padding:10px 12px 10px 34px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      outline:none;
+    }
+    .search input:focus{box-shadow: 0 0 0 4px var(--focus); border-color: rgba(124,58,237,.45);}
+    .search .mag{
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      color:var(--muted2);
+      font-size:14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+      align-items:stretch;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns: repeat(6, 1fr);}
+    }
+    @media (max-width: 640px){
+      .grid{grid-template-columns: repeat(1, 1fr);}
+      .search{min-width:100%;}
+    }
+
+    .card{
+      grid-column: span 4;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(16,25,53,.80), rgba(11,16,32,.55));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card.span6{grid-column: span 6;}
+    .card.span8{grid-column: span 8;}
+    .card.span12{grid-column: span 12;}
+    .cardHeader{
+      padding:14px 14px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .cardHeader h3{margin:0; font-size:14px;}
+    .cardHeader .sub{margin:6px 0 0; color:var(--muted); font-size:12px;}
+    .cardBody{padding:14px;}
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 640px){.kpis{grid-template-columns:1fr;}}
+    .kpi{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius2);
+      padding:12px;
+    }
+    .kpi .label{color:var(--muted); font-size:12px}
+    .kpi .value{font-size:20px; margin-top:6px}
+    .kpi .hint{color:var(--muted2); font-size:12px; margin-top:6px}
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size:13px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+    }
+    th{color:var(--muted); font-weight:600; font-size:12px;}
+    tr:hover td{background: rgba(255,255,255,.02)}
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--muted);
+      font-size:12px;
+      margin-right:6px;
+      margin-bottom:6px;
+      white-space:nowrap;
+    }
+    .tag.brand{background: var(--chip); border-color: rgba(124,58,237,.35); color: #d8c8ff;}
+    .tag.cyan{background: var(--chip2); border-color: rgba(6,182,212,.3); color: #bdf7ff;}
+    .tag.good{background: rgba(45,212,191,.14); border-color: rgba(45,212,191,.35); color:#b8fff4;}
+    .tag.warn{background: rgba(251,191,36,.14); border-color: rgba(251,191,36,.35); color:#ffe6a6;}
+    .tag.bad{background: rgba(251,113,133,.14); border-color: rgba(251,113,133,.35); color:#ffd0d8;}
+    .mono{font-family:var(--mono)}
+    .row{display:flex; gap:10px; flex-wrap:wrap;}
+    .muted{color:var(--muted)}
+    .muted2{color:var(--muted2)}
+    .right{ text-align:right;}
+    .nowrap{white-space:nowrap}
+    .small{font-size:12px}
+    .divider{height:1px; background: var(--border); margin:12px 0;}
+    .toast{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: min(420px, calc(100vw - 32px));
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(16,25,53,.88), rgba(11,16,32,.75));
+      box-shadow: var(--shadow);
+      border-radius: 18px;
+      padding: 12px 12px;
+      display:none;
+      z-index:9999;
+    }
+    .toast .tTitle{font-size:13px; margin:0;}
+    .toast .tBody{font-size:12px; color:var(--muted); margin:6px 0 0;}
+    .modalBackdrop{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9998;
+      padding: 16px;
+    }
+    .modal{
+      width: min(900px, 96vw);
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(16,25,53,.95), rgba(11,16,32,.80));
+      box-shadow: var(--shadow);
+      border-radius: 22px;
+      overflow:hidden;
+    }
+    .modalHead{
+      padding:14px 14px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid var(--border);
+    }
+    .modalHead h2{margin:0; font-size:16px;}
+    .modalBody{padding:14px;}
+    .modalGrid{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap:12px;
+    }
+    @media(max-width: 900px){.modalGrid{grid-template-columns:1fr;}}
+    .field{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+      padding: 10px;
+      margin-bottom:10px;
+    }
+    .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
+    .field input, .field select, .field textarea{
+      width:100%;
+      padding:10px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(11,16,32,.45);
+      color: var(--text);
+      outline:none;
+    }
+    .field textarea{min-height:96px; resize:vertical;}
+    .field input:focus, .field select:focus, .field textarea:focus{
+      box-shadow: 0 0 0 4px var(--focus);
+      border-color: rgba(124,58,237,.45);
+    }
+    .previewBox{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius: 18px;
+      padding: 12px;
+    }
+    .timeline{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .seg{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 10px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .seg .left{display:flex; gap:10px; align-items:center}
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(255,255,255,.25);
+      border:1px solid rgba(255,255,255,.2);
+    }
+    .dot.music{background: rgba(6,182,212,.8); border-color: rgba(6,182,212,.45);}
+    .dot.msg{background: rgba(124,58,237,.9); border-color: rgba(124,58,237,.5);}
+    .dot.ann{background: rgba(251,191,36,.9); border-color: rgba(251,191,36,.55);}
+    .seg .t{font-size:12px; color:var(--muted)}
+    .seg .name{font-size:13px}
+    .seg .meta{font-size:12px; color:var(--muted2)}
+    .footerNote{
+      margin-top:14px;
+      font-size:12px;
+      color:var(--muted2);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brandRow">
+        <div style="display:flex; gap:10px; align-items:center">
+          <div class="logo"></div>
+          <div class="brandText">
+            <b>Shift Audio</b>
+            <span>Operations Audio Platform</span>
+          </div>
+        </div>
+        <span class="pill" id="envPill">MVP Demo</span>
+      </div>
+
+      <div class="mobileNav">
+        <select id="mobileSelect"></select>
+      </div>
+
+      <nav class="nav" id="nav">
+        <!-- injected -->
+      </nav>
+
+      <div class="divider"></div>
+      <div class="row">
+        <span class="tag brand">Config-based</span>
+        <span class="tag cyan">Safety-first</span>
+        <span class="tag good">No live input</span>
+      </div>
+      <div class="footerNote">
+        Tip: use <span class="mono">Create Block</span> and <span class="mono">Preview Schedule</span> for a strong demo flow.
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">
+        <div class="titleBlock">
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">Monitor sites, players, and today’s audio programs.</p>
+        </div>
+        <div class="actions">
+          <div class="search">
+            <span class="mag">⌕</span>
+            <input id="searchInput" placeholder="Search sites, zones, players, message packs..." />
+          </div>
+          <button class="btn" id="btnPreview">👂 Preview Schedule</button>
+          <button class="btn primary" id="btnCreate">➕ Create Block</button>
+        </div>
+      </div>
+
+      <div id="page"></div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modalHead">
+        <div>
+          <h2 id="modalTitle">Create Hour Block</h2>
+          <div class="sub muted small" id="modalSub">Generate a 60-minute block with music + safety messages (pre-rendered MVP).</div>
+        </div>
+        <button class="btn" id="btnCloseModal">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="modalGrid">
+          <div>
+            <div class="field">
+              <label>Site</label>
+              <select id="mSite"></select>
+            </div>
+            <div class="field">
+              <label>Zone</label>
+              <select id="mZone"></select>
+            </div>
+            <div class="field">
+              <label>Shift</label>
+              <select id="mShift"></select>
+            </div>
+            <div class="field">
+              <label>Music Profile</label>
+              <select id="mProfile"></select>
+            </div>
+            <div class="field">
+              <label>Safety Cadence</label>
+              <select id="mCadence">
+                <option value="light">Light (every 20–30 min)</option>
+                <option value="standard" selected>Standard (every 12–18 min)</option>
+                <option value="high">High (every 8–12 min)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Language Pack</label>
+              <select id="mLang"></select>
+            </div>
+            <div class="field">
+              <label>Announcement Window (optional)</label>
+              <select id="mAnn">
+                <option value="none" selected>None</option>
+                <option value="top">Top of hour</option>
+                <option value="half">Half past</option>
+              </select>
+            </div>
+            <div class="row" style="justify-content:flex-end">
+              <button class="btn" id="btnSim">🔁 Regenerate</button>
+              <button class="btn primary" id="btnMake">✅ Generate Block</button>
+            </div>
+          </div>
+
+          <div class="previewBox">
+            <div class="row" style="justify-content:space-between; align-items:flex-start">
+              <div>
+                <div class="small muted">Block Preview</div>
+                <div style="margin-top:4px; font-size:14px;"><b id="prevHeading">Pick/Pack — Day Shift</b></div>
+                <div class="small muted2" id="prevMeta">60 min • BPM curve: 105→120 • Safety: Standard • Language: English</div>
+              </div>
+              <span class="tag brand mono" id="prevId">BLK-—</span>
+            </div>
+            <div class="divider"></div>
+            <div class="timeline" id="timeline"></div>
+            <div class="divider"></div>
+            <div class="row" style="justify-content:space-between; align-items:center">
+              <span class="small muted">Rendering method:</span>
+              <span class="tag cyan">Pre-rendered Hour Block</span>
+            </div>
+            <div class="footerNote">
+              MVP trade-off: announcements are inserted on the next render window (no real-time talkover).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <p class="tTitle" id="toastTitle">Saved</p>
+    <p class="tBody" id="toastBody">Changes applied successfully.</p>
+  </div>
+
+  <script>
+    // ----------------------------
+    // Demo data (editable in UI)
+    // ----------------------------
+    const state = {
+      org: { id: "org-001", name: "Demo Logistics Group" },
+      sites: [
+        { id:"site-syd", name:"Sydney DC", tz:"Australia/Sydney", zones:["Pick/Pack","Inbound Dock","Outbound Dock"] },
+        { id:"site-melb", name:"Melbourne DC", tz:"Australia/Melbourne", zones:["Pick/Pack","Returns","Mezzanine"] },
+        { id:"site-bris", name:"Brisbane DC", tz:"Australia/Brisbane", zones:["Pick/Pack","Cold Storage"] },
+      ],
+      shifts: [
+        { id:"shift-day", name:"Day Shift", start:"06:00", end:"14:00", days:"Mon–Fri", intent:"Peak" },
+        { id:"shift-arvo", name:"Afternoon Shift", start:"14:00", end:"22:00", days:"Mon–Fri", intent:"Steady" },
+        { id:"shift-night", name:"Night Shift", start:"22:00", end:"06:00", days:"Mon–Sun", intent:"Recovery" },
+      ],
+      profiles: [
+        { id:"p-peak", name:"Peak Flow", bpmMin:112, bpmMax:128, curve:"ramp", notes:"Higher energy, still non-distracting." },
+        { id:"p-steady", name:"Steady Focus", bpmMin:100, bpmMax:116, curve:"flat", notes:"Consistent tempo for repetitive work." },
+        { id:"p-recovery", name:"Night Recovery", bpmMin:88, bpmMax:104, curve:"gentle", notes:"Lower tempo for alertness without agitation." },
+      ],
+      messagePacks: [
+        { id:"mp-en-core", name:"Core Safety (EN)", lang:"en", topics:["Forklift awareness","Hydration","Manual handling","Housekeeping"] },
+        { id:"mp-es-core", name:"Core Safety (ES)", lang:"es", topics:["Montacargas","Hidratación","Levantamiento seguro","Orden y limpieza"] },
+        { id:"mp-fr-core", name:"Core Safety (FR)", lang:"fr", topics:["Chariots élévateurs","Hydratation","Manutention","Propreté"] },
+      ],
+      announcements: [
+        { id:"a-001", name:"Break reminder", lengthSec:10 },
+        { id:"a-002", name:"New pallets arriving", lengthSec:8 },
+        { id:"a-003", name:"Visitor on floor", lengthSec:7 },
+      ],
+      players: [
+        { id:"pl-syd-01", name:"SYD Player 01", site:"site-syd", zone:"Pick/Pack", status:"online", lastSeenMin:1, stream:"/stream/site-syd/pickpack" },
+        { id:"pl-syd-02", name:"SYD Player 02", site:"site-syd", zone:"Inbound Dock", status:"online", lastSeenMin:2, stream:"/stream/site-syd/inbound" },
+        { id:"pl-syd-03", name:"SYD Player 03", site:"site-syd", zone:"Outbound Dock", status:"warning", lastSeenMin:7, stream:"/stream/site-syd/outbound" },
+        { id:"pl-melb-01", name:"MEL Player 01", site:"site-melb", zone:"Pick/Pack", status:"online", lastSeenMin:1, stream:"/stream/site-melb/pickpack" },
+        { id:"pl-melb-02", name:"MEL Player 02", site:"site-melb", zone:"Returns", status:"offline", lastSeenMin:42, stream:"/stream/site-melb/returns" },
+        { id:"pl-bris-01", name:"BNE Player 01", site:"site-bris", zone:"Pick/Pack", status:"online", lastSeenMin:3, stream:"/stream/site-bris/pickpack" },
+      ],
+      blocks: [], // generated in demo
+      ui: { route:"dashboard", query:"" }
+    };
+
+    const routes = [
+      { id:"dashboard", label:"Dashboard", icon:"📊", hint:"Overview & health" },
+      { id:"sites", label:"Sites & Zones", icon:"🏭", hint:"Config per location" },
+      { id:"programs", label:"Programs", icon:"🗓️", hint:"Shifts & rules" },
+      { id:"content", label:"Content Packs", icon:"🎛️", hint:"Music & safety" },
+      { id:"players", label:"Players", icon:"🔊", hint:"Endpoints & uptime" },
+      { id:"pricing", label:"Pricing", icon:"💳", hint:"Plans & tiers" },
+    ];
+
+    // ----------------------------
+    // Utils
+    // ----------------------------
+    const $ = (sel)=>document.querySelector(sel);
+    const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
+    const fmtMin = (m)=> m < 60 ? `${m}m` : `${Math.floor(m/60)}h ${m%60}m`;
+    const now = ()=> new Date();
+    const uid = ()=> "BLK-" + Math.random().toString(16).slice(2,6).toUpperCase() + "-" + Math.random().toString(16).slice(2,6).toUpperCase();
+
+    function toast(title, body){
+      $("#toastTitle").textContent = title;
+      $("#toastBody").textContent = body;
+      $("#toast").style.display = "block";
+      clearTimeout(window.__toastT);
+      window.__toastT = setTimeout(()=> $("#toast").style.display = "none", 2800);
+    }
+
+    function setRoute(id){
+      state.ui.route = id;
+      render();
+    }
+
+    function setQuery(q){
+      state.ui.query = q;
+      render();
+    }
+
+    function statusTag(s){
+      if(s==="online") return `<span class="tag good">● Online</span>`;
+      if(s==="warning") return `<span class="tag warn">● Degraded</span>`;
+      return `<span class="tag bad">● Offline</span>`;
+    }
+
+    function siteName(siteId){
+      return state.sites.find(s=>s.id===siteId)?.name || siteId;
+    }
+
+    function ratio(n,d){ return d===0 ? 0 : Math.round((n/d)*100); }
+
+    // ----------------------------
+    // Block generation (demo)
+    // ----------------------------
+    function cadenceMinutes(mode){
+      if(mode==="light") return [20,30];
+      if(mode==="high") return [8,12];
+      return [12,18];
+    }
+    function randomInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
+
+    function buildTimeline({siteId, zone, shiftId, profileId, cadence, lang, ann}){
+      const shift = state.shifts.find(s=>s.id===shiftId);
+      const profile = state.profiles.find(p=>p.id===profileId);
+      const pack = state.messagePacks.find(p=>p.lang===lang) || state.messagePacks[0];
+
+      const segs = [];
+      let t = 0;
+      const id = uid();
+
+      // optional announcement placement (top/half)
+      const annAt = (ann==="top") ? 0 : (ann==="half" ? 30 : null);
+
+      const [cMin, cMax] = cadenceMinutes(cadence);
+      let nextMsg = randomInt(cMin, cMax);
+
+      while(t < 60){
+        if(annAt !== null && t === annAt){
+          const a = state.announcements[randomInt(0, state.announcements.length-1)];
+          segs.push({ type:"ann", at:t, name:`Announcement: ${a.name}`, meta:`~${a.lengthSec}s` });
+          // small music lead-in after announcement
+          segs.push({ type:"music", at:t, name:"Music bed (ducked)", meta:`BPM ${profile.bpmMin}–${profile.bpmMax}` });
+          t += 2; // keep timeline readable
+          continue;
+        }
+
+        if(t >= nextMsg){
+          const topic = pack.topics[randomInt(0, pack.topics.length-1)];
+          const msg = messageText(lang, topic);
+          segs.push({ type:"msg", at:t, name: msg, meta:`${lang.toUpperCase()} • 6–9s` });
+          nextMsg = t + randomInt(cMin, cMax);
+          t += 1;
+          continue;
+        }
+
+        // music segment chunk
+        segs.push({ type:"music", at:t, name:"Music segment", meta:`BPM ${profile.bpmMin}–${profile.bpmMax}` });
+        t += 5;
+      }
+
+      // condense to max 12 visible entries
+      const condensed = [];
+      for(const s of segs){
+        if(condensed.length===0 || condensed[condensed.length-1].type!==s.type){
+          condensed.push(s);
+        }
+      }
+
+      return {
+        id,
+        siteId,
+        zone,
+        shiftId,
+        profileId,
+        cadence,
+        lang,
+        ann,
+        createdAt: now().toISOString(),
+        durationMin: 60,
+        curve: profile.curve,
+        bpmMin: profile.bpmMin,
+        bpmMax: profile.bpmMax,
+        packId: pack.id,
+        timeline: condensed.slice(0, 12)
+      };
+    }
+
+    function messageText(lang, topic){
+      const t = topic.toLowerCase();
+      const map = {
+        en: [
+          `Safety check: ${topic}. Keep it calm, keep it clear.`,
+          `Reminder: ${topic}. Take a second, stay aware.`,
+          `Quick safety note: ${topic}. Eyes up, pace steady.`,
+        ],
+        es: [
+          `Nota de seguridad: ${topic}. Mantén la calma y atención.`,
+          `Recordatorio: ${topic}. Un segundo de cuidado ayuda.`,
+          `Aviso breve: ${topic}. Atención y ritmo constante.`,
+        ],
+        fr: [
+          `Info sécurité: ${topic}. Calme et vigilance.`,
+          `Rappel: ${topic}. Un instant de prudence suffit.`,
+          `Note rapide: ${topic}. Regard levé, rythme stable.`,
+        ],
+      };
+      const arr = map[lang] || map.en;
+      return arr[randomInt(0, arr.length-1)];
+    }
+
+    function upsertBlock(block){
+      state.blocks.unshift(block);
+      // keep last 25
+      state.blocks = state.blocks.slice(0,25);
+    }
+
+    // ----------------------------
+    // Render: Navigation
+    // ----------------------------
+    function renderNav(){
+      const nav = $("#nav");
+      nav.innerHTML = routes.map(r=>{
+        const active = state.ui.route===r.id ? "active" : "";
+        return `
+          <button class="${active}" data-route="${r.id}">
+            <div class="left">
+              <span class="icon">${r.icon}</span>
+              <div>
+                <div style="font-weight:650; font-size:13px">${r.label}</div>
+                <div class="metaSmall">${r.hint}</div>
+              </div>
+            </div>
+            <span class="metaSmall">›</span>
+          </button>
+        `;
+      }).join("");
+
+      $$("#nav button").forEach(btn=>{
+        btn.addEventListener("click", ()=> setRoute(btn.dataset.route));
+      });
+
+      // mobile select
+      const sel = $("#mobileSelect");
+      sel.innerHTML = routes.map(r=>`<option value="${r.id}">${r.icon} ${r.label}</option>`).join("");
+      sel.value = state.ui.route;
+      sel.onchange = ()=> setRoute(sel.value);
+    }
+
+    // ----------------------------
+    // Pages
+    // ----------------------------
+    function pageHeader(title, subtitle){
+      $("#pageTitle").textContent = title;
+      $("#pageSubtitle").textContent = subtitle;
+    }
+
+    function filteredSites(){
+      const q = state.ui.query.trim().toLowerCase();
+      if(!q) return state.sites;
+      return state.sites.filter(s => (s.name+" "+s.zones.join(" ")).toLowerCase().includes(q));
+    }
+
+    function filteredPlayers(){
+      const q = state.ui.query.trim().toLowerCase();
+      if(!q) return state.players;
+      return state.players.filter(p => (p.name+" "+siteName(p.site)+" "+p.zone).toLowerCase().includes(q));
+    }
+
+    function renderDashboard(){
+      pageHeader("Dashboard", "Monitor sites, players, and today’s audio programs.");
+      const totalPlayers = state.players.length;
+      const online = state.players.filter(p=>p.status==="online").length;
+      const warn = state.players.filter(p=>p.status==="warning").length;
+      const offline = state.players.filter(p=>p.status==="offline").length;
+
+      const recent = state.blocks.slice(0,5);
+
+      return `
+        <div class="grid">
+          <div class="card span12">
+            <div class="cardHeader">
+              <div>
+                <h3>Ops Health</h3>
+                <div class="sub">MVP view: pre-rendered hour blocks per zone + player pull streaming.</div>
+              </div>
+              <div class="row">
+                <span class="tag good">Uptime target: 99.5%</span>
+                <span class="tag cyan">Config versioned</span>
+                <span class="tag brand">No live input</span>
+              </div>
+            </div>
+            <div class="cardBody">
+              <div class="kpis">
+                <div class="kpi">
+                  <div class="label">Players Online</div>
+                  <div class="value">${online} / ${totalPlayers}</div>
+                  <div class="hint">${ratio(online,totalPlayers)}% currently healthy</div>
+                </div>
+                <div class="kpi">
+                  <div class="label">Degraded</div>
+                  <div class="value">${warn}</div>
+                  <div class="hint">Buffering / reconnect events</div>
+                </div>
+                <div class="kpi">
+                  <div class="label">Offline</div>
+                  <div class="value">${offline}</div>
+                  <div class="hint">Last heartbeat &gt; 15 minutes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card span6">
+            <div class="cardHeader">
+              <div>
+                <h3>Sites</h3>
+                <div class="sub">Warehouse-agnostic config; each site can override zone programs.</div>
+              </div>
+              <button class="btn" onclick="setRoute('sites')">Open</button>
+            </div>
+            <div class="cardBody">
+              <table>
+                <thead><tr><th>Site</th><th>Zones</th><th class="right">Timezone</th></tr></thead>
+                <tbody>
+                  ${state.sites.map(s=>`
+                    <tr>
+                      <td><b>${s.name}</b><div class="small muted mono">${s.id}</div></td>
+                      <td>${s.zones.map(z=>`<span class="tag">${z}</span>`).join("")}</td>
+                      <td class="right nowrap">${s.tz}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card span6">
+            <div class="cardHeader">
+              <div>
+                <h3>Recent Hour Blocks</h3>
+                <div class="sub">Pre-rendered: music + safety inserts + optional announcement windows.</div>
+              </div>
+              <button class="btn" onclick="openPreview()">Preview</button>
+            </div>
+            <div class="cardBody">
+              ${recent.length ? `
+                <table>
+                  <thead><tr><th>Block</th><th>Site / Zone</th><th class="right">Created</th></tr></thead>
+                  <tbody>
+                    ${recent.map(b=>`
+                      <tr>
+                        <td><span class="tag brand mono">${b.id}</span><div class="small muted">${b.cadence} • ${b.lang.toUpperCase()} • BPM ${b.bpmMin}–${b.bpmMax}</div></td>
+                        <td><b>${siteName(b.siteId)}</b><div class="small muted">${b.zone} • ${state.shifts.find(s=>s.id===b.shiftId)?.name}</div></td>
+                        <td class="right small muted2 nowrap">${new Date(b.createdAt).toLocaleString()}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              ` : `
+                <div class="muted">No blocks generated yet. Click <b>Create Block</b> to generate a realistic hour schedule.</div>
+              `}
+            </div>
+          </div>
+
+          <div class="card span12">
+            <div class="cardHeader">
+              <div>
+                <h3>Players</h3>
+                <div class="sub">Endpoints are intentionally thin: stream + watchdog + heartbeat.</div>
+              </div>
+              <button class="btn" onclick="setRoute('players')">Manage</button>
+            </div>
+            <div class="cardBody">
+              <table>
+                <thead><tr><th>Player</th><th>Site / Zone</th><th>Status</th><th class="right">Last Seen</th></tr></thead>
+                <tbody>
+                  ${state.players.slice(0,6).map(p=>`
+                    <tr>
+                      <td><b>${p.name}</b><div class="small muted mono">${p.id}</div></td>
+                      <td>${siteName(p.site)} <span class="muted">•</span> ${p.zone}</td>
+                      <td>${statusTag(p.status)}</td>
+                      <td class="right nowrap"><span class="tag">${fmtMin(p.lastSeenMin)} ago</span></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSites(){
+      pageHeader("Sites & Zones", "Configure warehouses with minimal per-site setup (overrides are optional).");
+      const sites = filteredSites();
+      return `
+        <div class="grid">
+          <div class="card span8">
+            <div class="cardHeader">
+              <div>
+                <h3>Sites</h3>
+                <div class="sub">Each site has zones. MVP: 1–3 zones per site.</div>
+              </div>
+              <button class="btn primary" onclick="toast('MVP note','Site creation is mocked. Focus is on configuration + preview.')">➕ New Site</button>
+            </div>
+            <div class="cardBody">
+              <table>
+                <thead><tr><th>Site</th><th>Zones</th><th class="right">Action</th></tr></thead>
+                <tbody>
+                  ${sites.map(s=>`
+                    <tr>
+                      <td><b>${s.name}</b><div class="small muted mono">${s.id} • ${s.tz}</div></td>
+                      <td>${s.zones.map(z=>`<span class="tag">${z}</span>`).join("")}</td>
+                      <td class="right">
+                        <button class="btn" onclick="openCreate('${s.id}','${s.zones[0]}')">Create Block</button>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+              ${!sites.length ? `<div class="muted">No results. Try a different search.</div>` : ``}
+            </div>
+          </div>
+
+          <div class="card span4">
+            <div class="cardHeader">
+              <div>
+                <h3>Config Principles</h3>
+                <div class="sub">Keep it repeatable across warehouses.</div>
+              </div>
+            </div>
+            <div class="cardBody">
+              <div class="row">
+                <span class="tag brand">Org defaults</span>
+                <span class="tag cyan">Site overrides</span>
+                <span class="tag good">Zone programs</span>
+              </div>
+              <div class="divider"></div>
+              <div class="small muted">
+                <b>Recommended MVP approach</b><br/>
+                Start with a default program per shift, then allow optional per-zone overrides for high-noise or high-risk areas.
+              </div>
+              <div class="divider"></div>
+              <div class="small muted2">
+                Post-MVP: site groups, templates, bulk rollout, and change-approval workflows.
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPrograms(){
+      pageHeader("Programs", "Define shift schedules and attach music + safety rules (config-based).");
+      return `
+        <div class="grid">
+          <div class="card span6">
+            <div class="cardHeader">
+              <div>
+                <h3>Shift Calendar</h3>
+                <div class="sub">MVP: time windows + intent (Peak/Steady/Recovery).</div>
+              </div>
+              <button class="btn" onclick="toast('MVP note','Editing shift calendars is mocked for demo.')">Edit</button>
+            </div>
+            <div class="cardBody">
+              <table>
+                <thead><tr><th>Shift</th><th>Time</th><th class="right">Intent</th></tr></thead>
+                <tbody>
+                  ${state.shifts.map(s=>`
+                    <tr>
+                      <td><b>${s.name}</b><div class="small muted">${s.days}</div></td>
+                      <td class="nowrap">${s.start} → ${s.end}</td>
+                      <td class="right"><span class="tag brand">${s.intent}</span></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card span6">
+            <div class="cardHeader">
+              <div>
+                <h3>Program Templates</h3>
+                <div class="sub">Reusable presets: fewer knobs, safer outcomes.</div>
+              </div>
+              <button class="btn primary" onclick="openCreate()">➕ Use Template</button>
+            </div>
+            <div class="cardBody">
+              <div class="row">
+                <span class="tag cyan">Peak Flow + Standard safety</span>
+                <span class="tag cyan">Steady Focus + Standard safety</span>
+                <span class="tag cyan">Night Recovery + Light safety</span>
+              </div>
+              <div class="divider"></div>
+              <div class="small muted">
+                MVP: templates map directly to hour-block generation settings (profile, cadence, language, announcement windows).
+              </div>
+              <div class="divider"></div>
+              <div class="small muted2">
+                Post-MVP: seasonal templates, risk-based presets, compliance packs.
+              </div>
+            </div>
+          </div>
+
+          <div class="card span12">
+            <div class="cardHeader">
+              <div>
+                <h3>Schedule Preview</h3>
+                <div class="sub">See how music + messages layer over a shift (predictable, calm).</div>
+              </div>
+              <button class="btn" onclick="openPreview()">👂 Preview</button>
+            </div>
+            <div class="cardBody">
+              <div class="small muted">Click <b>Preview Schedule</b> to generate a realistic hour timeline for a selected site/zone/shift.</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderContent(){
+      pageHeader("Content Packs", "Manage compliant assets: music profiles, safety messages, language packs.");
+      return `
+        <div class="grid">
+          <div class="card span6">
+            <div class="cardHeader">
+              <div>
+                <h3>Music Profiles</h3>
+                <div class="sub">BPM-controlled profiles (functional, not entertainment).</div>
+              </div>
+              <button class="btn" onclick="toast('Saved','Profile changes are mocked for this demo.')">Save</button>
+            </div>
+            <div class="cardBody">
+              <table>
+                <thead><tr><th>Profile</th><th>BPM</th><th class="right">Curve</th></tr></thead>
+                <tbody>
+                  ${state.profiles.map(p=>`
+                    <tr>
+                      <td><b>${p.name}</b><div class="small muted">${p.notes}</div></td>
+                      <td class="nowrap">${p.bpmMin}–${p.bpmMax}</td>
+                      <td class="right"><span class="tag">${p.curve}</span></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+              <div class="divider"></div>
+              <div class="small muted2">
+                Compliance: store track licenses + provenance metadata per asset (post-MVP: automated reports).
+              </div>
+            </div>
+          </div>
+
+          <div class="card span6">
+            <div class="cardHeader">
+              <div>
+                <h3>Safety Message Packs</h3>
+                <div class="sub">Short, calm micro-messages with rotation + cadence.</div>
+              </div>
+              <button class="btn primary" onclick="openPreview()">Preview</button>
+            </div>
+            <div class="cardBody">
+              <table>
+                <thead><tr><th>Pack</th><th>Language</th><th class="right">Topics</th></tr></thead>
+                <tbody>
+                  ${state.messagePacks.map(m=>`
+                    <tr>
+                      <td><b>${m.name}</b><div class="small muted mono">${m.id}</div></td>
+                      <td><span class="tag cyan">${m.lang.toUpperCase()}</span></td>
+                      <td class="right"><span class="tag">${m.topics.length}</span></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+              <div class="divider"></div>
+              <div class="small muted">
+                MVP: 1 voice per language. Post-MVP: multiple voices + site tone presets.
+              </div>
+            </div>
+          </div>
+
+          <div class="card span12">
+            <div class="cardHeader">
+              <div>
+                <h3>Announcements</h3>
+                <div class="sub">Pre-recorded only. Inserted during defined windows.</div>
+              </div>
+              <button class="btn" onclick="toast('Upload mocked','In MVP demo, announcements are represented as clips with duration.')">Upload</button>
+            </div>
+            <div class="cardBody">
+              <table>
+                <thead><tr><th>Clip</th><th>Length</th><th class="right">Usage</th></tr></thead>
+                <tbody>
+                  ${state.announcements.map(a=>`
+                    <tr>
+                      <td><b>${a.name}</b><div class="small muted mono">${a.id}</div></td>
+                      <td class="nowrap">${a.lengthSec}s</td>
+                      <td class="right"><span class="tag warn">Windowed insert</span></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPlayers(){
+      pageHeader("Players", "Thin endpoints: stream + watchdog + heartbeat. Reliability-first.");
+      const players = filteredPlayers();
+      const online = players.filter(p=>p.status==="online").length;
+      const warn = players.filter(p=>p.status==="warning").length;
+      const offline = players.filter(p=>p.status==="offline").length;
+
+      return `
+        <div class="grid">
+          <div class="card span12">
+            <div class="cardHeader">
+              <div>
+                <h3>Fleet Status</h3>
+                <div class="sub">MVP: pull playback (CDN URL) with local buffering.</div>
+              </div>
+              <div class="row">
+                <span class="tag good">${online} Online</span>
+                <span class="tag warn">${warn} Degraded</span>
+                <span class="tag bad">${offline} Offline</span>
+              </div>
+            </div>
+            <div class="cardBody">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Assignment</th>
+                    <th>Status</th>
+                    <th class="right">Last Seen</th>
+                    <th class="right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${players.map(p=>`
+                    <tr>
+                      <td><b>${p.name}</b><div class="small muted mono">${p.id}</div></td>
+                      <td><b>${siteName(p.site)}</b><div class="small muted">${p.zone}</div></td>
+                      <td>${statusTag(p.status)}</td>
+                      <td class="right nowrap"><span class="tag">${fmtMin(p.lastSeenMin)} ago</span></td>
+                      <td class="right nowrap">
+                        <button class="btn" onclick="toast('Restart requested','MVP: player restart would be a remote command (post-MVP).')">Restart</button>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+              ${!players.length ? `<div class="muted">No results. Try a different search.</div>` : ``}
+            </div>
+          </div>
+
+          <div class="card span12">
+            <div class="cardHeader">
+              <div>
+                <h3>Player Requirements</h3>
+                <div class="sub">Designed for warehouse conditions (power loss, Wi‑Fi drops, noise).</div>
+              </div>
+            </div>
+            <div class="cardBody">
+              <div class="row">
+                <span class="tag good">Auto-reconnect</span>
+                <span class="tag cyan">Local buffering</span>
+                <span class="tag brand">Heartbeat</span>
+                <span class="tag warn">Volume limits</span>
+              </div>
+              <div class="divider"></div>
+              <div class="small muted2">
+                MVP implementation can be: Raspberry Pi + browser kiosk, Android app, or Windows service. Keep the endpoint thin.
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPricing(){
+      pageHeader("Pricing", "Simple, warehouse-friendly tiers (per site, with zone add-ons).");
+      return `
+        <div class="grid">
+          <div class="card span4">
+            <div class="cardHeader">
+              <div>
+                <h3>Starter</h3>
+                <div class="sub">1 site • up to 2 zones</div>
+              </div>
+              <span class="tag good">MVP fit</span>
+            </div>
+            <div class="cardBody">
+              <div class="kpi">
+                <div class="label">Monthly</div>
+                <div class="value">$499</div>
+                <div class="hint">Includes core EN pack</div>
+              </div>
+              <div class="divider"></div>
+              <div class="small muted">
+                • Hour-block streaming<br/>
+                • Safety cadence presets<br/>
+                • Player health dashboard<br/>
+                • Email support
+              </div>
+              <div class="divider"></div>
+              <button class="btn primary" onclick="toast('Demo only','Pricing is illustrative for the prototype.')">Select</button>
+            </div>
+          </div>
+
+          <div class="card span4">
+            <div class="cardHeader">
+              <div>
+                <h3>Standard</h3>
+                <div class="sub">1 site • up to 5 zones</div>
+              </div>
+              <span class="tag cyan">Most common</span>
+            </div>
+            <div class="cardBody">
+              <div class="kpi">
+                <div class="label">Monthly</div>
+                <div class="value">$899</div>
+                <div class="hint">EN + 1 extra language</div>
+              </div>
+              <div class="divider"></div>
+              <div class="small muted">
+                • All Starter features<br/>
+                • Announcement windows<br/>
+                • Config versioning & rollback<br/>
+                • Priority support
+              </div>
+              <div class="divider"></div>
+              <button class="btn primary" onclick="toast('Demo only','Pricing is illustrative for the prototype.')">Select</button>
+            </div>
+          </div>
+
+          <div class="card span4">
+            <div class="cardHeader">
+              <div>
+                <h3>Enterprise</h3>
+                <div class="sub">Multi-site • custom compliance</div>
+              </div>
+              <span class="tag brand">Scale</span>
+            </div>
+            <div class="cardBody">
+              <div class="kpi">
+                <div class="label">Monthly</div>
+                <div class="value">Custom</div>
+                <div class="hint">Multi-site rollout + reports</div>
+              </div>
+              <div class="divider"></div>
+              <div class="small muted">
+                • Multi-site templates<br/>
+                • Compliance reporting<br/>
+                • SSO (post-MVP)<br/>
+                • Dedicated onboarding
+              </div>
+              <div class="divider"></div>
+              <button class="btn" onclick="toast('Demo only','Enterprise is post-MVP scale packaging.')">Contact</button>
+            </div>
+          </div>
+
+          <div class="card span12">
+            <div class="cardHeader">
+              <div>
+                <h3>MVP Packaging Notes</h3>
+                <div class="sub">Keep pricing simple; avoid per-user complexity.</div>
+              </div>
+            </div>
+            <div class="cardBody">
+              <div class="small muted2">
+                Suggested MVP pricing axis: <b>per site</b> with <b>zones add-on</b>. Players are included per zone to reduce friction.
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPage(){
+      switch(state.ui.route){
+        case "sites": return renderSites();
+        case "programs": return renderPrograms();
+        case "content": return renderContent();
+        case "players": return renderPlayers();
+        case "pricing": return renderPricing();
+        default: return renderDashboard();
+      }
+    }
+
+    // ----------------------------
+    // Modal wiring
+    // ----------------------------
+    function openModal(){
+      $("#modalBackdrop").style.display = "flex";
+    }
+    function closeModal(){
+      $("#modalBackdrop").style.display = "none";
+    }
+    function fillModalDefaults({siteId=null, zone=null}={}){
+      // Site select
+      $("#mSite").innerHTML = state.sites.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+      $("#mSite").value = siteId || state.sites[0].id;
+
+      updateZoneOptions(zone);
+      // shifts
+      $("#mShift").innerHTML = state.shifts.map(s=>`<option value="${s.id}">${s.name} (${s.start}–${s.end})</option>`).join("");
+      $("#mShift").value = state.shifts[0].id;
+      // profiles
+      $("#mProfile").innerHTML = state.profiles.map(p=>`<option value="${p.id}">${p.name} (${p.bpmMin}–${p.bpmMax} BPM)</option>`).join("");
+      $("#mProfile").value = state.profiles[0].id;
+      // lang
+      const langs = Array.from(new Set(state.messagePacks.map(m=>m.lang)));
+      $("#mLang").innerHTML = langs.map(l=>`<option value="${l}">${l.toUpperCase()}</option>`).join("");
+      $("#mLang").value = "en";
+
+      // attach change handlers to update preview
+      ["mSite","mZone","mShift","mProfile","mCadence","mLang","mAnn"].forEach(id=>{
+        $("#"+id).onchange = ()=> simulatePreview();
+      });
+
+      simulatePreview();
+    }
+
+    function updateZoneOptions(zonePref=null){
+      const siteId = $("#mSite").value;
+      const site = state.sites.find(s=>s.id===siteId);
+      const zones = site?.zones || ["Pick/Pack"];
+      $("#mZone").innerHTML = zones.map(z=>`<option value="${z}">${z}</option>`).join("");
+      $("#mZone").value = zonePref && zones.includes(zonePref) ? zonePref : zones[0];
+    }
+
+    function simulatePreview(){
+      updateZoneOptions($("#mZone").value);
+      const params = {
+        siteId: $("#mSite").value,
+        zone: $("#mZone").value,
+        shiftId: $("#mShift").value,
+        profileId: $("#mProfile").value,
+        cadence: $("#mCadence").value,
+        lang: $("#mLang").value,
+        ann: $("#mAnn").value
+      };
+      const block = buildTimeline(params);
+
+      $("#prevId").textContent = block.id;
+      const shiftName = state.shifts.find(s=>s.id===block.shiftId)?.name || "Shift";
+      $("#prevHeading").textContent = `${block.zone} — ${shiftName}`;
+      $("#prevMeta").textContent = `60 min • BPM curve: ${block.bpmMin}→${block.bpmMax} • Safety: ${block.cadence} • Language: ${block.lang.toUpperCase()}`;
+
+      $("#timeline").innerHTML = block.timeline.map(seg=>{
+        const dotClass = seg.type==="music" ? "music" : (seg.type==="msg" ? "msg" : "ann");
+        const label = seg.type==="music" ? "Music" : (seg.type==="msg" ? "Safety" : "Announcement");
+        const at = String(seg.at).padStart(2,"0");
+        return `
+          <div class="seg">
+            <div class="left">
+              <span class="dot ${dotClass}"></span>
+              <div>
+                <div class="name"><b>${label}</b> — ${seg.name}</div>
+                <div class="meta">t+${at}m • ${seg.meta}</div>
+              </div>
+            </div>
+            <div class="t">›</div>
+          </div>
+        `;
+      }).join("");
+
+      // stash for create
+      window.__currentBlock = block;
+    }
+
+    function generateBlock(){
+      if(!window.__currentBlock) simulatePreview();
+      upsertBlock(window.__currentBlock);
+      toast("Block generated", `${window.__currentBlock.id} created for ${siteName(window.__currentBlock.siteId)} • ${window.__currentBlock.zone}.`);
+      closeModal();
+      render(); // refresh lists
+    }
+
+    // quick open helpers
+    function openCreate(siteId=null, zone=null){
+      fillModalDefaults({siteId, zone});
+      $("#modalTitle").textContent = "Create Hour Block";
+      $("#modalSub").textContent = "Generate a 60-minute block with music + safety messages (pre-rendered MVP).";
+      openModal();
+    }
+    function openPreview(){
+      fillModalDefaults({});
+      $("#modalTitle").textContent = "Preview Schedule";
+      $("#modalSub").textContent = "Use this to demo how functional audio layers work (music + micro-messages + announcements).";
+      openModal();
+    }
+
+    // ----------------------------
+    // Main render
+    // ----------------------------
+    function render(){
+      renderNav();
+      $("#searchInput").value = state.ui.query;
+      $("#page").innerHTML = renderPage();
+
+      // keep mobile select in sync
+      $("#mobileSelect").value = state.ui.route;
+    }
+
+    // ----------------------------
+    // Wiring
+    // ----------------------------
+    $("#btnCreate").addEventListener("click", ()=> openCreate());
+    $("#btnPreview").addEventListener("click", ()=> openPreview());
+    $("#btnCloseModal").addEventListener("click", closeModal);
+    $("#modalBackdrop").addEventListener("click", (e)=>{ if(e.target.id==="modalBackdrop") closeModal(); });
+    $("#btnSim").addEventListener("click", ()=> simulatePreview());
+    $("#btnMake").addEventListener("click", ()=> generateBlock());
+    $("#mSite").addEventListener("change", ()=> { updateZoneOptions(); simulatePreview(); });
+
+    $("#searchInput").addEventListener("input", (e)=> setQuery(e.target.value));
+
+    // keyboard shortcuts
+    document.addEventListener("keydown", (e)=>{
+      if(e.key==="Escape") closeModal();
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==="k"){
+        e.preventDefault();
+        $("#searchInput").focus();
+      }
+    });
+
+    // seed one example block for nicer demo
+    upsertBlock(buildTimeline({
+      siteId:"site-syd",
+      zone:"Pick/Pack",
+      shiftId:"shift-day",
+      profileId:"p-peak",
+      cadence:"standard",
+      lang:"en",
+      ann:"top"
+    }));
+
+    render();
+    window.setRoute = setRoute;
+    window.openCreate = openCreate;
+    window.openPreview = openPreview;
+  </script>
+</body>
+</html>

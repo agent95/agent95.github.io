@@ -38,6 +38,7 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
     breakStartMin: addMin(nowMinReal(), 180), // +3h
     breakDurationMin: 20,
     endMin: addMin(nowMinReal(), 360), // +6h
+    _nowMin: nowMinReal(),
     breakActive: false,
     lastPhase: 'OFF' as 'PRE' | 'BREAK' | 'POST' | 'END' | 'ON' | 'OFF',
     started: false,
@@ -48,7 +49,7 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
       return (state.breakStartMin + state.breakDurationMin) % (24 * 60)
     },
     isInShift(state): boolean {
-      return isBetween(state._nowMin ?? 0, state.startMin, state.endMin)
+      return isBetween(state._nowMin, state.startMin, state.endMin)
     },
   },
   actions: {
@@ -101,7 +102,7 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
       return 'ON'
     },
     async handleTick(nowMin: number) {
-      ;(this as any)._nowMin = nowMin
+      this._nowMin = nowMin
       if (this.started && !isBetween(nowMin, this.startMin, this.endMin)) {
         this.stopShift()
         return
@@ -147,7 +148,7 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
         name: label,
         priority: 'P1_SAFETY',
         deliveryMode: 'immediate',
-        scheduledAtMin: (this as any)._nowMin ?? 0,
+        scheduledAtMin: this._nowMin,
         state: 'QUEUED',
       })
       ann.sortQueue()

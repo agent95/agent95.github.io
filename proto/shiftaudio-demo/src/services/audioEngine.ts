@@ -11,7 +11,11 @@ function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
+    const ai = a[i]
+    const aj = a[j]
+    if (ai === undefined || aj === undefined) continue
+    a[i] = aj
+    a[j] = ai
   }
   return a
 }
@@ -148,7 +152,9 @@ export class AudioEngine {
 
   private nextTrackUrl(): string {
     if (!this.trackList.length) throw new Error('Playlist not loaded')
-    const url = this.trackList[this.trackIndex % this.trackList.length]
+    const idx = this.trackIndex % this.trackList.length
+    const url = this.trackList[idx]
+    if (!url) throw new Error('Track URL missing in playlist')
     this.trackIndex++
     return url
   }

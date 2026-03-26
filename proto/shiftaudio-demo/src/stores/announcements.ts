@@ -232,6 +232,7 @@ export const useAnnouncementsStore = defineStore('announcements', {
 
       while (this.queue.length < desired) {
         const item = safetyIds[idx % safetyIds.length]
+        if (!item) break
         this.queue.push({
           id: item.id,
           name: item.name,

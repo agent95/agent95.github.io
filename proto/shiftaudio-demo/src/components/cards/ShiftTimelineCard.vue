@@ -29,7 +29,9 @@ function toTimeInput(min: number): string {
 }
 
 function fromTimeInput(v: string): number {
-  const [hh, mm] = v.split(':').map((n) => Number.parseInt(n, 10))
+  const [hhRaw = '0', mmRaw = '0'] = v.split(':')
+  const hh = Number.parseInt(hhRaw, 10)
+  const mm = Number.parseInt(mmRaw, 10)
   if (!Number.isFinite(hh) || !Number.isFinite(mm)) return 0
   return Math.max(0, Math.min(24 * 60 - 1, hh * 60 + mm))
 }

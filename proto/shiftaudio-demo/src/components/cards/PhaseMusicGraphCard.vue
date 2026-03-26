@@ -29,7 +29,7 @@ const pointData = computed(() => {
   return phases.map((phase, idx) => {
     const playlist = phaseMusic.value[phase]
     const yIndex = Math.max(0, displayPlaylists.indexOf(playlist as BedPlaylist))
-    const xPct = phases.length === 1 ? 0.5 : idx / (phases.length - 1)
+    const xPct = idx / (phases.length - 1)
     return { phase, label: phaseLabels[idx] ?? phase, yIndex, xPct, idx }
   })
 })
@@ -85,11 +85,15 @@ function yIndexFromClientY(clientY: number) {
 
 function onPointerDown(phase: (typeof phases)[number], e: PointerEvent) {
   const idx = yIndexFromClientY(e.clientY)
-  shift.setPhaseMusic(phase, displayPlaylists[idx])
+  const playlist = displayPlaylists[idx]
+  if (!playlist) return
+  shift.setPhaseMusic(phase, playlist)
 }
 
 function onSegmentClick(phase: (typeof phases)[number], level: number) {
-  shift.setPhaseMusic(phase, displayPlaylists[level])
+  const playlist = displayPlaylists[level]
+  if (!playlist) return
+  shift.setPhaseMusic(phase, playlist)
 }
 </script>
 

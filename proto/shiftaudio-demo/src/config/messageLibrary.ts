@@ -3,6 +3,7 @@ import type { Priority } from '@/types/domain'
 
 export type MessageKey =
   | 'shift_start'
+  | 'shift_end'
   | 'safety_tip'
   | 'forklift_awareness'
   | 'emergency_stop'
@@ -37,6 +38,15 @@ export const messageLibrary: Record<MessageKey, MessageSpec> = {
     priority: 'P1_SAFETY',
     toneUrl: '/messages/tones/attention.wav',
     audioUrl: '/messages/safety/shift-start.wav',
+    volume: 1,
+    duckLevel: 0.25,
+  },
+  shift_end: {
+    key: 'shift_end',
+    label: 'Shift ended',
+    priority: 'P1_SAFETY',
+    toneUrl: '/messages/tones/attention.wav',
+    audioUrl: '/messages/shiftend',
     volume: 1,
     duckLevel: 0.25,
   },
@@ -98,6 +108,7 @@ export const messageLibrary: Record<MessageKey, MessageSpec> = {
 /** Map Announcement IDs to message keys */
 export const announcementIdToKey: Record<string, MessageKey> = {
   'a-shift-start': 'shift_start',
+  'shift-end': 'shift_end',
   'a-forklift': 'forklift_awareness',
   'a-stay-hydrated': 'safety_tip',
   emergency: 'emergency_stop',

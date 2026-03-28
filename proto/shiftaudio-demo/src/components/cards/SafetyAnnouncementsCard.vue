@@ -37,6 +37,27 @@ function scheduledLabel(min: number) {
   return minToTime(min)
 }
 
+function countdownLabel(targetMin: number) {
+  if (loading.value || !shift.started) return 'Pending'
+
+  const nowMin = clock.nowMin
+  const rawDiff = targetMin - nowMin
+  const recentlyDueWindowMin = 120
+
+  if (rawDiff <= 0 && Math.abs(rawDiff) < recentlyDueWindowMin) {
+    return 'Due now'
+  }
+
+  const diff = (targetMin - nowMin + 24 * 60) % (24 * 60)
+
+  if (diff === 0) return 'Due now'
+  if (diff < 60) return `In ${diff}m`
+
+  const hours = Math.floor(diff / 60)
+  const mins = diff % 60
+  return mins === 0 ? `In ${hours}h` : `In ${hours}h ${mins}m`
+}
+
 const uiError = ref('')
 
 watch(
@@ -89,7 +110,10 @@ async function onDeliver(id: string) {
           ><span class="v">{{ scheduledLabel(next.scheduledAtMin) }}</span>
         </div>
         <div>
-          <span class="k">State</span><span class="v">{{ next.state }}</span>
+          <span class="k">Countdown</span>
+          <span class="v" :class="{ due: countdownLabel(next.scheduledAtMin) === 'Due now' }">
+            {{ countdownLabel(next.scheduledAtMin) }}
+          </span>
         </div>
       </div>
 
@@ -112,7 +136,12 @@ async function onDeliver(id: string) {
               Skip Queue
             </button>
           </div>
-          <div class="qm">{{ scheduledLabel(a.scheduledAtMin) }} • {{ a.priority }}</div>
+          <div class="qm">
+            <span :class="{ due: countdownLabel(a.scheduledAtMin) === 'Due now' }">
+              {{ countdownLabel(a.scheduledAtMin) }}
+            </span>
+            • {{ scheduledLabel(a.scheduledAtMin) }} • {{ a.priority }}
+          </div>
         </div>
       </div>
       <div v-else class="muted">
@@ -138,6 +167,10 @@ async function onDeliver(id: string) {
 .v {
   font-weight: 800;
   font-size: 12px;
+}
+:deep(.due),
+.due {
+  color: var(--ok);
 }
 .panel {
   margin-top: 10px;

@@ -104,6 +104,7 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
     async handleTick(nowMin: number) {
       this._nowMin = nowMin
       if (this.started && !isBetween(nowMin, this.startMin, this.endMin)) {
+        await this.announceShiftEnded()
         this.stopShift()
         return
       }
@@ -153,6 +154,19 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
       })
       ann.sortQueue()
       await ann.deliverImmediate(id, 'shift_break_event', { allowDuringBreak: true })
+    },
+    async announceShiftEnded() {
+      const ann = useAnnouncementsStore()
+      ann.queue.push({
+        id: 'shift-end',
+        name: 'Shift ended',
+        priority: 'P1_SAFETY',
+        deliveryMode: 'immediate',
+        scheduledAtMin: this._nowMin,
+        state: 'QUEUED',
+      })
+      ann.sortQueue()
+      await ann.deliverImmediate('shift-end', 'shift_end_event', { allowDuringBreak: true })
     },
   },
 })

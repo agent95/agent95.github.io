@@ -42,9 +42,8 @@ function countdownLabel(targetMin: number) {
 
   const nowMin = clock.nowMin
   const rawDiff = targetMin - nowMin
-  const recentlyDueWindowMin = 120
 
-  if (rawDiff <= 0 && Math.abs(rawDiff) < recentlyDueWindowMin) {
+  if (rawDiff <= 0) {
     return 'Due now'
   }
 

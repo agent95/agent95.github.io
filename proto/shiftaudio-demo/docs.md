@@ -262,6 +262,8 @@ This updates:
 
 ### DemoView Slideshow Asset Table
 
+**Slideshow voice:** `Enceladus (male) English (Australia)`
+
 | Slide | Voiceover Script | Voiceover Audio File | Image File |
 | --- | --- | --- | --- |
 | Problem | On a busy warehouse floor, routine safety messages can be missed, delayed, or drowned out by the operating environment. | `/public/audio/intro/intro-01.mp3` | `/public/assets/intro-slideshow/overview-placeholder.svg` |

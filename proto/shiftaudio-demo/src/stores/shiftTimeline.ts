@@ -42,6 +42,7 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
     breakActive: false,
     lastPhase: 'OFF' as 'PRE' | 'BREAK' | 'POST' | 'END' | 'ON' | 'OFF',
     started: false,
+    shiftEnding: false,
     phaseMusic: { ...defaultPhaseMusic },
   }),
   getters: {
@@ -73,6 +74,7 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
     },
     startShift() {
       this.started = true
+      this.shiftEnding = false
       this.snapClockToShiftStart()
       const ann = useAnnouncementsStore()
       ann.clearAll()
@@ -80,6 +82,7 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
     },
     stopShift() {
       this.started = false
+      this.shiftEnding = false
       this.breakActive = false
       this.lastPhase = 'OFF'
       const audio = useAudioStore()
@@ -104,6 +107,8 @@ export const useShiftTimelineStore = defineStore('shiftTimeline', {
     async handleTick(nowMin: number) {
       this._nowMin = nowMin
       if (this.started && !isBetween(nowMin, this.startMin, this.endMin)) {
+        if (this.shiftEnding) return
+        this.shiftEnding = true
         await this.announceShiftEnded()
         this.stopShift()
         return

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+const emit = defineEmits<{
+  (e: 'start-guide'): void
+}>()
+
 type Slide = {
   eyebrow: string
   title: string
@@ -202,6 +206,11 @@ function reopenSlideshow() {
   void startAudioExperience()
 }
 
+function startGuide() {
+  closeSlideshow()
+  emit('start-guide')
+}
+
 watch(activeIndex, () => {
   void playVoiceoverForActiveSlide()
 })
@@ -291,6 +300,14 @@ defineExpose({
           <div class="intro-slideshow__actions">
             <button class="btn btn-secondary" type="button" :disabled="!canGoBack" @click="goBack">
               Back
+            </button>
+            <button
+              v-if="!canGoForward"
+              class="btn"
+              type="button"
+              @click="startGuide"
+            >
+              Start walkthrough guide
             </button>
             <!-- <button class="btn" type="button" @click="startAudioExperience">Replay audio</button> -->
             <button class="btn intro-slideshow__primary" type="button" @click="goNext">

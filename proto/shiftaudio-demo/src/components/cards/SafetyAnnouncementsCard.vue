@@ -160,6 +160,7 @@ async function onDeliver(id: string) {
 }
 .queue {
   margin-top: 12px;
+  min-height: 180px;
 }
 .qtbar {
   display: flex;
@@ -169,7 +170,10 @@ async function onDeliver(id: string) {
   margin-bottom: 6px;
 }
 .qlist {
-  min-height: 88px;
+  display: grid;
+  gap: 6px;
+  grid-auto-rows: minmax(48px, auto);
+  min-height: 156px;
 }
 .qt {
   font-weight: 800;
@@ -191,13 +195,10 @@ async function onDeliver(id: string) {
 .qrefresh:hover {
   color: rgba(12, 18, 28, 1);
 }
-.qlist {
-  display: grid;
-  gap: 8px;
-}
 .qrow {
-  padding: 8px 10px;
-  border-radius: 12px;
+  min-height: 48px;
+  padding: 7px 9px;
+  border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.6);
 }
@@ -205,20 +206,22 @@ async function onDeliver(id: string) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
 }
 .qn {
   font-weight: 800;
   font-size: 12px;
+  line-height: 1.2;
 }
 .qbtn {
   border: 1px solid rgba(0, 0, 0, 0.18);
   background: rgba(255, 255, 255, 0.9);
   border-radius: 999px;
-  padding: 4px 8px;
-  font-size: 11px;
+  padding: 3px 7px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
 }
 .qbtn:hover {
   border-color: rgba(0, 0, 0, 0.3);
@@ -226,9 +229,12 @@ async function onDeliver(id: string) {
 .qm {
   font-size: 11px;
   opacity: 0.75;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 .muted {
+  min-height: 156px;
+  display: flex;
+  align-items: center;
   opacity: 0.7;
   font-size: 13px;
 }

@@ -17,7 +17,7 @@ const playingSvg = '/assets/svg/animated.svg'
 </script>
 
 <template>
-  <div class="bar">
+  <div class="bar" data-guide-scope>
     <div class="brand">
       <img class="logo" :src="bed.playing ? playingSvg : idleSvg" alt="ShiftAudio" />
       <div class="text">
@@ -28,7 +28,9 @@ const playingSvg = '/assets/svg/animated.svg'
 
     <div class="right">
       <ClockBadge :mode="mode" />
-      <TimeModeToggle v-model="mode" />
+      <div data-guide="time-mode">
+        <TimeModeToggle v-model="mode" />
+      </div>
     </div>
   </div>
 </template>

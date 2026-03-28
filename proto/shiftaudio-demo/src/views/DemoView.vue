@@ -79,6 +79,7 @@ const guideSteps = [
     actionLabel: 'Look for',
     actionBody:
       'As messages play, check the log to see the delivery mode and result recorded for each event.',
+    panelPosition: 'top-left',
   },
   {
     selector: '[data-guide="system-health"]',
@@ -120,6 +121,7 @@ function stopProdClock() {
 }
 
 function replayDemoView() {
+  showGuide.value = false
   if (shift.started) {
     shift.stopShift()
   }

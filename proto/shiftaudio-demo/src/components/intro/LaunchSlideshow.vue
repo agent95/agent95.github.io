@@ -342,6 +342,7 @@ defineExpose({
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
   width: min(1240px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
   min-height: min(760px, calc(100vh - 48px));
   overflow: hidden;
   border: 1px solid var(--border);
@@ -403,6 +404,7 @@ defineExpose({
   justify-content: center;
   gap: 22px;
   padding: 64px 54px 48px;
+  overflow-y: auto;
   color: var(--text);
   background: rgba(255, 255, 255, 0.82);
 }
@@ -515,26 +517,83 @@ h1 {
 
 @media (max-width: 980px) {
   .intro-slideshow {
-    padding: 12px;
+    padding: 10px;
   }
 
   .intro-slideshow__panel {
     grid-template-columns: 1fr;
-    width: min(100vw - 24px, 720px);
+    width: min(100vw - 20px, 720px);
+    max-height: calc(100vh - 20px);
     min-height: auto;
   }
 
   .intro-slideshow__media {
-    min-height: 280px;
-    max-height: 36vh;
+    min-height: 180px;
+    max-height: 28vh;
   }
 
   .intro-slideshow__content {
-    padding: 28px 22px 24px;
+    gap: 16px;
+    padding: 20px 16px 16px;
   }
 
   h1 {
-    font-size: clamp(2rem, 8vw, 2.8rem);
+    font-size: clamp(1.5rem, 7vw, 2.2rem);
+    line-height: 1.05;
+  }
+
+  .intro-slideshow__close {
+    top: 12px;
+    right: 12px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .intro-slideshow__media-tag {
+    left: 12px;
+    bottom: 12px;
+    padding: 7px 10px;
+    font-size: 0.68rem;
+  }
+
+  .intro-slideshow__body {
+    font-size: 0.96rem;
+    line-height: 1.55;
+  }
+
+  .intro-slideshow__caption {
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .intro-slideshow__actions {
+    gap: 8px;
+  }
+
+  .intro-slideshow__actions .btn {
+    min-width: 0;
+    flex: 1 1 140px;
+    padding: 10px;
+  }
+
+  .intro-slideshow__timeline {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .intro-slideshow__meta {
+    gap: 6px;
+  }
+
+  .intro-slideshow__meta :deep(.chip) {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+
+  .intro-slideshow__progress {
+    height: 5px;
   }
 }
 </style>

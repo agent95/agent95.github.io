@@ -7,6 +7,7 @@ type WalkthroughStep = {
   body: string
   actionLabel?: string
   actionBody?: string
+  panelPosition?: 'auto' | 'top-left' | 'top-right'
 }
 
 const props = defineProps<{
@@ -28,16 +29,33 @@ let activeScope: HTMLElement | null = null
 const activeStep = computed(() => props.steps[activeIndex.value] ?? null)
 const canGoBack = computed(() => activeIndex.value > 0)
 const canGoForward = computed(() => activeIndex.value < props.steps.length - 1)
+const isMobile = computed(() => viewportWidth.value < 980)
 const panelStyle = computed(() => {
   const panelWidth = Math.min(360, Math.max(280, viewportWidth.value - 48))
   const margin = 24
   const gap = 18
   const panelHeight = 220
 
-  if (!targetRect.value || viewportWidth.value < 980) {
+  if (activeStep.value?.panelPosition === 'top-left') {
     return {
-      left: `${Math.max(margin, (viewportWidth.value - panelWidth) / 2)}px`,
-      top: `${Math.max(margin, viewportHeight.value - panelHeight - margin)}px`,
+      left: `${margin}px`,
+      top: `${margin}px`,
+    }
+  }
+
+  if (activeStep.value?.panelPosition === 'top-right') {
+    return {
+      left: `${Math.max(margin, viewportWidth.value - panelWidth - margin)}px`,
+      top: `${margin}px`,
+    }
+  }
+
+  if (!targetRect.value || isMobile.value) {
+    return {
+      left: '10px',
+      right: '10px',
+      bottom: '10px',
+      top: 'auto',
     }
   }
 
@@ -124,7 +142,11 @@ function updateTargetRect() {
   activeScope = nextScope
   activeScope?.setAttribute('data-guide-scope-active', 'true')
 
-  target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+  target.scrollIntoView({
+    behavior: 'smooth',
+    block: isMobile.value ? 'start' : 'center',
+    inline: 'nearest',
+  })
   targetRect.value = target.getBoundingClientRect()
 }
 
@@ -188,7 +210,12 @@ onBeforeUnmount(() => {
 
 <template>
   <transition name="guide-fade">
-    <section v-if="active" class="guide" aria-label="ShiftAudio walkthrough guide">
+    <section
+      v-if="active"
+      class="guide"
+      :class="{ 'is-mobile': isMobile }"
+      aria-label="ShiftAudio walkthrough guide"
+    >
       <div class="guide__backdrop" />
 
       <div
@@ -238,11 +265,13 @@ onBeforeUnmount(() => {
   position: fixed;
   z-index: 3;
   width: min(360px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 18px;
   background: var(--surface-strong);
   box-shadow: var(--shadow);
+  overflow-y: auto;
 }
 
 .guide__eyebrow {
@@ -321,5 +350,60 @@ p {
 :global([data-guide-scope-active='true']) {
   position: relative;
   z-index: 501;
+}
+
+@media (max-width: 980px) {
+  .guide__backdrop {
+    background: rgba(15, 23, 42, 0.16);
+    backdrop-filter: none;
+  }
+
+  .guide__panel {
+    width: auto;
+    max-height: min(48vh, 420px);
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  h2 {
+    font-size: 1.05rem;
+  }
+
+  p {
+    font-size: 0.94rem;
+    line-height: 1.5;
+  }
+
+  .guide__actions {
+    gap: 8px;
+  }
+
+  .guide__actions .btn {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .guide__panel {
+    width: auto;
+    max-height: min(50vh, 420px);
+    padding: 14px;
+  }
+
+  .guide__action-note {
+    padding: 10px 11px;
+  }
+
+  .guide__action-body {
+    font-size: 13px;
+  }
+
+  :global([data-guide-active='true']) {
+    border-radius: 16px;
+    box-shadow:
+      0 0 0 2px rgba(56, 189, 248, 0.88),
+      0 10px 18px rgba(15, 23, 42, 0.1);
+  }
 }
 </style>

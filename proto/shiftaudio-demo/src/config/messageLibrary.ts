@@ -46,7 +46,7 @@ export const messageLibrary: Record<MessageKey, MessageSpec> = {
     label: 'Shift ended',
     priority: 'P1_SAFETY',
     toneUrl: '/messages/tones/attention.wav',
-    audioUrl: '/messages/shiftend',
+    audioUrl: '/messages/shiftend/shift-end.wav',
     volume: 1,
     duckLevel: 0.25,
   },

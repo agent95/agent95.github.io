@@ -1,0 +1,23 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#091526"/>
+  <circle cx="250" cy="160" r="180" fill="#1C79A5" fill-opacity="0.3"/>
+  <circle cx="1360" cy="700" r="240" fill="#F59E0B" fill-opacity="0.18"/>
+  <rect x="120" y="140" width="1360" height="620" rx="32" fill="#0F2438" stroke="#5EEAD4" stroke-opacity="0.35"/>
+  <rect x="180" y="210" width="420" height="26" rx="13" fill="#5EEAD4" fill-opacity="0.8"/>
+  <rect x="180" y="268" width="620" height="88" rx="22" fill="#F8FAFC" fill-opacity="0.08"/>
+  <rect x="180" y="382" width="370" height="22" rx="11" fill="#E2E8F0" fill-opacity="0.3"/>
+  <rect x="180" y="420" width="300" height="22" rx="11" fill="#E2E8F0" fill-opacity="0.22"/>
+  <rect x="980" y="230" width="320" height="360" rx="30" fill="#08111F" stroke="#1C79A5" stroke-opacity="0.5"/>
+  <rect x="1020" y="280" width="160" height="160" rx="28" fill="#F59E0B" fill-opacity="0.22"/>
+  <rect x="1020" y="472" width="220" height="20" rx="10" fill="#F8FAFC" fill-opacity="0.75"/>
+  <rect x="1020" y="508" width="180" height="20" rx="10" fill="#E2E8F0" fill-opacity="0.3"/>
+  <text x="180" y="520" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="58" font-weight="700">
+    ShiftAudio keeps warehouse messaging audible,
+  </text>
+  <text x="180" y="590" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="58" font-weight="700">
+    timed, and operationally calm.
+  </text>
+  <text x="180" y="675" fill="#94A3B8" font-family="Arial, sans-serif" font-size="28">
+    Placeholder concept art for Amazon intro slideshow
+  </text>
+</svg>

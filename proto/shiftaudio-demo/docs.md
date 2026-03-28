@@ -165,3 +165,121 @@ This updates:
 
 - `/public/audio/*/manifest.json`
 - `src/config/safetyManifest.ts`
+
+---
+
+## 30-Second Video Script – Why Amazon Should Adopt ShiftAudio in the Warehouse
+
+**Audience:** Amazon Operations + Safety leadership
+
+**Goal:** Position ShiftAudio as a practical way to improve safety communication without hurting throughput.
+
+### 0:00-0:05 | Problem
+
+**Visual**
+
+- Fast cuts of a busy warehouse floor, conveyors moving, scanners beeping, associates working in a noisy environment.
+- On-screen text: `Busy floor. High noise. Critical messages get missed.`
+
+**Voiceover**
+
+> “Amazon warehouses move fast, but in high-noise environments, safety messages can get lost or ignored.”
+
+### 0:05-0:12 | Solution
+
+**Visual**
+
+- Cut to ShiftAudio UI showing bed audio, scheduled safety announcements, and shift timeline.
+- On-screen text: `ShiftAudio delivers safety at the right moment.`
+
+**Voiceover**
+
+> “ShiftAudio solves that by layering clear safety announcements into the shift at the right moments, without interrupting workflow.”
+
+### 0:12-0:20 | Why It Works
+
+**Visual**
+
+- Show bed audio playing, then a crossfade into a safety message.
+- Brief highlight of cadence, break handling, and emergency override.
+- On-screen text: `Timed delivery. Break-aware. Emergency-first.`
+
+**Voiceover**
+
+> “It times messages around live audio, respects breaks, and gives emergency alerts instant priority, so teams stay informed without creating more noise.”
+
+### 0:20-0:27 | Amazon Value
+
+**Visual**
+
+- Return to warehouse footage with workers moving smoothly.
+- Overlay simple metrics-style text: `Better compliance`, `Less disruption`, `Clearer communication`.
+
+**Voiceover**
+
+> “For Amazon, that means stronger safety compliance, less disruption on the floor, and clearer communication during every shift.”
+
+### 0:27-0:30 | Close
+
+**Visual**
+
+- ShiftAudio logo or product UI with a clean closing frame.
+- On-screen text: `ShiftAudio for safer, smoother warehouse operations.`
+
+**Voiceover**
+
+> “ShiftAudio helps Amazon make warehouse operations safer, smoother, and more consistent at scale.”
+
+### Per-Slide Voiceover for DemoView Slideshow
+
+1. **Problem**
+
+> “On a busy warehouse floor, routine safety messages can be missed, delayed, or drowned out by the operating environment.”
+
+2. **Solution**
+
+> “ShiftAudio adds a managed safety messaging layer to the shift, so communication stays clear, timely, and operationally controlled.”
+
+3. **Feature: Immediate or Crossfade Delivery**
+
+> “ShiftAudio can deliver messages right away when needed, or place them on the next crossfade so routine communication fits more naturally into the listening experience.”
+
+4. **Feature: Phase Music Mapping**
+
+> “Background audio can be mapped by phase to support focus, recovery, or short push periods, while always staying subordinate to safety messaging.”
+
+5. **Why It Works**
+
+> “ShiftAudio coordinates playback around live audio, pauses routine messaging during breaks, and gives emergency alerts immediate priority.”
+
+6. **Amazon Value**
+
+> “For mixed audiences, the value is straightforward: clearer communication for teams on the floor and more consistent safety delivery for site leaders.”
+
+7. **Close**
+
+> “When something critical happens, ShiftAudio stops background audio and gives urgent messaging immediate priority.”
+
+### DemoView Slideshow Asset Table
+
+| Slide | Voiceover Script | Voiceover Audio File | Image File |
+| --- | --- | --- | --- |
+| Problem | On a busy warehouse floor, routine safety messages can be missed, delayed, or drowned out by the operating environment. | `/public/audio/intro/intro-01.mp3` | `/public/assets/intro-slideshow/overview-placeholder.svg` |
+| Solution | ShiftAudio adds a managed safety messaging layer to the shift, so communication stays clear, timely, and operationally controlled. | `/public/audio/intro/intro-02.mp3` | `/public/assets/intro-slideshow/feature-screenshot-announcements.svg` |
+| Feature: Immediate or Crossfade Delivery | ShiftAudio can deliver messages right away when needed, or place them on the next crossfade so routine communication fits more naturally into the listening experience. | `/public/audio/intro/intro-03.mp3` | `/public/assets/intro-slideshow/feature-screenshot-timeline.svg` |
+| Feature: Phase Music Mapping | Background audio can be mapped by phase to support focus, recovery, or short push periods, while always staying subordinate to safety messaging. | `/public/audio/intro/intro-04.mp3` | `/public/assets/intro-slideshow/feature-screenshot-phase-music.svg` |
+| Why It Works | ShiftAudio coordinates playback around live audio, pauses routine messaging during breaks, and gives emergency alerts immediate priority. | `/public/audio/intro/intro-05.mp3` | `/public/assets/intro-slideshow/feature-screenshot-emergency.svg` |
+| Amazon Value | For mixed audiences, the value is straightforward: clearer communication for teams on the floor and more consistent safety delivery for site leaders. | `/public/audio/intro/intro-06.mp3` | `/public/assets/intro-slideshow/compliance-placeholder.svg` |
+| Close | When something critical happens, ShiftAudio stops background audio and gives urgent messaging immediate priority. | `/public/audio/intro/intro-07.mp3` | `/public/assets/intro-slideshow/overview-placeholder.svg` |
+
+**Background music:** `/public/audio/intro/intro-background.mp3`
+
+### Optional On-Screen Tagline Variants
+
+- `Safety messaging built for warehouse flow.`
+- `The right message. The right moment.`
+- `Safer shifts without slowing operations.`
+
+### Founder-Style Spoken Script
+
+> “Amazon’s warehouse network runs on speed, precision, and safety, but on a busy floor, important safety messages can easily become background noise. ShiftAudio changes that. We deliver the right safety message at the right moment in the shift, timed around workflow instead of cutting across it. That means clearer communication, better compliance, and less disruption for associates and operations leaders. And when something critical happens, emergency messaging takes priority immediately. ShiftAudio helps Amazon make safety communication more consistent, more effective, and more scalable across the warehouse network.”

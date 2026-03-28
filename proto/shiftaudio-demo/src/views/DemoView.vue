@@ -1,6 +1,6 @@
 <!-- src/views/DemoView.vue -->
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import AppShell from '@/components/shell/AppShell.vue'
 import BrandBar from '@/components/shell/BrandBar.vue'
 import TopBar from '@/components/shell/TopBar.vue'
@@ -16,6 +16,7 @@ import PhaseMusicGraphCard from '@/components/cards/PhaseMusicGraphCard.vue'
 import ShiftTimelineCard from '@/components/cards/ShiftTimelineCard.vue'
 import ComplianceNoticeCard from '@/components/cards/ComplianceNoticeCard.vue'
 import DebugPanel from '@/components/cards/DebugPanel.vue'
+import LaunchSlideshow from '@/components/intro/LaunchSlideshow.vue'
 
 import { useDemoClockStore } from '@/stores/demoClock'
 import { useAnnouncementsStore } from '@/stores/announcements'
@@ -24,6 +25,7 @@ import { useAnnounceParam } from '@/composables/useAnnounceParam'
 import { useCrossfadeBridge } from '@/composables/useCrossfadeBridge'
 import { useShiftTimelineBridge } from '@/composables/useShiftTimelineBridge'
 import DemoModeBanner from '@/components/demo/DemoModeBanner.vue'
+import type LaunchSlideshowComponent from '@/components/intro/LaunchSlideshow.vue'
 
 const clock = useDemoClockStore()
 const ann = useAnnouncementsStore()
@@ -35,6 +37,7 @@ useShiftTimelineBridge()
 
 let timer: number | undefined
 let prodTimer: number | undefined
+const launchSlideshow = ref<InstanceType<typeof LaunchSlideshowComponent> | null>(null)
 
 function startDemoClock() {
   if (timer) return
@@ -55,6 +58,10 @@ function stopProdClock() {
   if (!prodTimer) return
   window.clearInterval(prodTimer)
   prodTimer = undefined
+}
+
+function replayDemoView() {
+  launchSlideshow.value?.reopenSlideshow()
 }
 
 onMounted(() => {
@@ -93,6 +100,8 @@ onUnmounted(() => {
 
 <template>
   <AppShell>
+    <LaunchSlideshow ref="launchSlideshow" />
+
     <template #brandbar>
       <BrandBar />
     </template>
@@ -107,7 +116,7 @@ onUnmounted(() => {
       <template #left>
         <SafetyAnnouncementsCard />
         <EmergencyOverrideCard />
-        <SystemHealthCard />
+        <SystemHealthCard :on-replay-intro="replayDemoView" />
         <!-- <DebugPanel /> -->
         <ComplianceNoticeCard />
       </template>

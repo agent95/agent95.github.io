@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+const props = withDefaults(
+  defineProps<{
+    openOnMount?: boolean
+  }>(),
+  {
+    openOnMount: false,
+  },
+)
+
 const emit = defineEmits<{
   (e: 'start-guide'): void
 }>()
@@ -94,7 +103,7 @@ const slides: Slide[] = [
   },
 ]
 
-const isOpen = ref(true)
+const isOpen = ref(props.openOnMount)
 const hasStartedAudio = ref(false)
 const isPaused = ref(false)
 const activeIndex = ref(0)

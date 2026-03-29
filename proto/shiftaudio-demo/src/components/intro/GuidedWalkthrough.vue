@@ -8,6 +8,9 @@ type WalkthroughStep = {
   actionLabel?: string
   actionBody?: string
   panelPosition?: 'auto' | 'top-left' | 'top-right'
+  primaryButtonLabel?: string
+  primaryButtonVariant?: 'default' | 'start' | 'play' | 'emergency'
+  primaryAction?: () => void | 'stay' | Promise<void | 'stay'>
 }
 
 const props = defineProps<{
@@ -184,6 +187,17 @@ function goBack() {
   if (canGoBack.value) activeIndex.value -= 1
 }
 
+async function handlePrimaryAction() {
+  let result: void | 'stay' = undefined
+
+  if (activeStep.value?.primaryAction) {
+    result = await activeStep.value.primaryAction()
+  }
+
+  if (result === 'stay') return
+  goNext()
+}
+
 watch(
   () => props.active,
   (active) => {
@@ -235,7 +249,6 @@ onBeforeUnmount(() => {
           Walkthrough {{ activeIndex + 1 }} of {{ steps.length }}
         </div>
         <h2>{{ activeStep?.title }}</h2>
-        <p>{{ activeStep?.body }}</p>
         <div v-if="activeStep?.actionLabel && activeStep?.actionBody" class="guide__action-note">
           <div class="guide__action-label">{{ activeStep.actionLabel }}</div>
           <div class="guide__action-body">{{ activeStep.actionBody }}</div>
@@ -246,8 +259,27 @@ onBeforeUnmount(() => {
             Back
           </button>
           <button class="btn" type="button" @click="closeGuide">Close</button>
-          <button class="btn guide__primary" type="button" @click="goNext">
-            {{ canGoForward ? 'Next step' : 'Finish walkthrough' }}
+          <button
+            class="btn guide__primary"
+            :class="{
+              'is-start': activeStep?.primaryButtonVariant === 'start',
+              'is-play': activeStep?.primaryButtonVariant === 'play',
+              'is-emergency': activeStep?.primaryButtonVariant === 'emergency',
+            }"
+            type="button"
+            @click="handlePrimaryAction"
+          >
+            <svg
+              v-if="activeStep?.primaryButtonVariant === 'play'"
+              class="guide__primary-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M8 5v14l11-7z" fill="currentColor" />
+            </svg>
+            {{
+              activeStep?.primaryButtonLabel ?? (canGoForward ? 'Next step' : 'Finish walkthrough')
+            }}
           </button>
         </div>
       </div>
@@ -342,6 +374,47 @@ p {
 .guide__primary:hover {
   border-color: rgba(194, 65, 12, 0.4);
   background: #c2410c;
+}
+
+.guide__primary.is-start {
+  border-color: rgba(22, 163, 74, 0.5);
+  background: rgba(22, 163, 74, 0.12);
+  color: rgba(22, 101, 52, 0.95);
+}
+
+.guide__primary.is-start:hover {
+  border-color: rgba(22, 163, 74, 0.64);
+  background: rgba(22, 163, 74, 0.2);
+}
+
+.guide__primary.is-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-color: rgba(22, 163, 74, 0.5);
+  background: rgba(22, 163, 74, 0.12);
+  color: rgba(22, 101, 52, 0.95);
+}
+
+.guide__primary.is-play:hover {
+  border-color: rgba(22, 163, 74, 0.64);
+  background: rgba(22, 163, 74, 0.2);
+}
+
+.guide__primary-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.guide__primary.is-emergency {
+  border-color: rgba(255, 0, 0, 0.35);
+  background: rgba(255, 0, 0, 0.08);
+  color: rgba(153, 27, 27, 0.95);
+}
+
+.guide__primary.is-emergency:hover {
+  border-color: rgba(255, 0, 0, 0.5);
+  background: rgba(255, 0, 0, 0.16);
 }
 
 .guide-fade-enter-active,

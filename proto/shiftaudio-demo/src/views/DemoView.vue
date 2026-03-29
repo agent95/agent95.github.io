@@ -1,6 +1,7 @@
 <!-- src/views/DemoView.vue -->
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import AppShell from '@/components/shell/AppShell.vue'
 import BrandBar from '@/components/shell/BrandBar.vue'
 import TopBar from '@/components/shell/TopBar.vue'
@@ -19,26 +20,38 @@ import DebugPanel from '@/components/cards/DebugPanel.vue'
 import LaunchSlideshow from '@/components/intro/LaunchSlideshow.vue'
 import GuidedWalkthrough from '@/components/intro/GuidedWalkthrough.vue'
 
+import { useAudioStore } from '@/stores/audio'
 import { useDemoClockStore } from '@/stores/demoClock'
 import { useAnnouncementsStore } from '@/stores/announcements'
 import { useShiftTimelineStore } from '@/stores/shiftTimeline'
 import { useAnnounceParam } from '@/composables/useAnnounceParam'
 import { useCrossfadeBridge } from '@/composables/useCrossfadeBridge'
 import { useShiftTimelineBridge } from '@/composables/useShiftTimelineBridge'
+import { announceEngine } from '@/services/announceEngine'
 import DemoModeBanner from '@/components/demo/DemoModeBanner.vue'
 import type LaunchSlideshowComponent from '@/components/intro/LaunchSlideshow.vue'
 
+const audio = useAudioStore()
 const clock = useDemoClockStore()
 const ann = useAnnouncementsStore()
 const shift = useShiftTimelineStore()
+const route = useRoute()
 const showGuide = ref(false)
-const guideSteps = [
+const showIntroOnMount = computed(() => route.query.intro === 'true')
+const guideSteps = computed(() => [
   {
     selector: '[data-guide="shift-timeline"]',
     title: 'Shift Timeline',
     body: 'The walkthrough starts in Demo mode so the clock is simulated. Start the shift here, adjust the timing, and see how ShiftAudio follows the operating window and break periods.',
     actionLabel: 'Try this',
     actionBody: 'Click Start Shift to begin the demo flow and activate the shift timeline.',
+    primaryButtonLabel: shift.started ? 'Next step' : 'Start Shift',
+    primaryButtonVariant: shift.started ? 'default' : 'start',
+    primaryAction: async () => {
+      if (!shift.started) {
+        shift.startShift()
+      }
+    },
   },
   {
     selector: '[data-guide="announcements"]',
@@ -47,6 +60,7 @@ const guideSteps = [
     actionLabel: 'Try this',
     actionBody:
       'After starting the shift, watch the queue fill and see how the next messages are staged.',
+    primaryButtonLabel: 'Background Audio',
   },
   {
     selector: '[data-guide="background-audio"]',
@@ -55,6 +69,14 @@ const guideSteps = [
     actionLabel: 'Try this',
     actionBody:
       'Press play, then use Crossfade Now to see how routine delivery can fit around live audio.',
+    primaryButtonLabel: audio.bed.playing ? 'Next step' : 'Play',
+    primaryButtonVariant: audio.bed.playing ? 'default' : 'play',
+    primaryAction: async () => {
+      if (!audio.bed.playing) {
+        announceEngine.enableFromUserGesture()
+        audio.startBed()
+      }
+    },
   },
   {
     selector: '[data-guide="phase-music"]',
@@ -71,6 +93,15 @@ const guideSteps = [
     actionLabel: 'Try this',
     actionBody:
       'Trigger the emergency override to see normal audio yield immediately to urgent messaging.',
+    primaryButtonLabel: ann.emergency.active ? 'End Emergency' : 'Announce Emergency',
+    primaryButtonVariant: 'emergency',
+    primaryAction: async () => {
+      if (!ann.emergency.active) {
+        await ann.triggerEmergency('Emergency Stop')
+        return 'stay'
+      }
+      await ann.endEmergency()
+    },
   },
   {
     selector: '[data-guide="announcement-log"]',
@@ -89,7 +120,7 @@ const guideSteps = [
     actionBody:
       'Use Replay Intro if you want to restart the presentation, or monitor system state while the demo runs.',
   },
-]
+])
 
 useAnnounceParam()
 useCrossfadeBridge()
@@ -178,7 +209,11 @@ onUnmounted(() => {
 
 <template>
   <AppShell>
-    <LaunchSlideshow ref="launchSlideshow" @start-guide="startGuide" />
+    <LaunchSlideshow
+      ref="launchSlideshow"
+      :open-on-mount="showIntroOnMount"
+      @start-guide="startGuide"
+    />
     <GuidedWalkthrough :active="showGuide" :steps="guideSteps" @close="onGuideClose" />
 
     <template #brandbar>

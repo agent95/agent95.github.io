@@ -16,7 +16,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'close'): void
+  (e: 'close', reason?: 'dismiss' | 'finish'): void
 }>()
 
 const activeIndex = ref(0)
@@ -160,7 +160,7 @@ function closeGuide() {
     activeScope = null
   }
   targetRect.value = null
-  emit('close')
+  emit('close', 'dismiss')
 }
 
 function goNext() {
@@ -168,7 +168,16 @@ function goNext() {
     activeIndex.value += 1
     return
   }
-  closeGuide()
+  if (activeTarget) {
+    activeTarget.removeAttribute('data-guide-active')
+    activeTarget = null
+  }
+  if (activeScope) {
+    activeScope.removeAttribute('data-guide-scope-active')
+    activeScope = null
+  }
+  targetRect.value = null
+  emit('close', 'finish')
 }
 
 function goBack() {
@@ -325,7 +334,14 @@ p {
 }
 
 .guide__primary {
-  background: var(--surface-strong);
+  color: #fff;
+  border-color: rgba(194, 65, 12, 0.28);
+  background: #ea580c;
+}
+
+.guide__primary:hover {
+  border-color: rgba(194, 65, 12, 0.4);
+  background: #c2410c;
 }
 
 .guide-fade-enter-active,

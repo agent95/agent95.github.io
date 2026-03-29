@@ -22,9 +22,9 @@ const slides: Slide[] = [
     title: 'Busy floor. High noise. Critical messages get missed.',
     body: 'On a busy warehouse floor, routine safety messages can be missed, delayed, or drowned out by the operating environment.',
     caption: 'The communication problem ShiftAudio is designed to solve',
-    image: '/assets/intro-slideshow/overview-placeholder.svg',
+    image: '/assets/intro-slideshow/busy-warehouse.png',
     imageAlt: 'Warehouse problem placeholder artwork',
-    mediaTag: 'Context image',
+    mediaTag: 'Busy warehouse',
     voiceover: '/audio/intro/intro-01.mp3',
   },
   {
@@ -32,21 +32,21 @@ const slides: Slide[] = [
     title: 'ShiftAudio delivers safety at the right moment.',
     body: 'ShiftAudio adds a managed safety messaging layer to the shift, so communication stays clear, timely, and operationally controlled.',
     caption: 'A product walkthrough of how messaging fits into the workflow',
-    image: '/assets/intro-slideshow/feature-screenshot-announcements.svg',
+    image: '/assets/intro-slideshow/feature-screenshot-timeline.png',
     imageAlt:
       'ShiftAudio screenshot showing announcements queue, shift timeline, and background audio controls',
-    mediaTag: 'ShiftAudio screenshot',
+    mediaTag: 'Screenshot',
     voiceover: '/audio/intro/intro-02.mp3',
   },
-  {
+  /*{
     eyebrow: 'Feature',
     title: 'Announcements can play immediately or on the next crossfade.',
-    body: 'ShiftAudio can deliver messages right away when needed, or wait for the next background-audio crossfade so routine communication lands more naturally.',
+    body: 'Messages wait for the next background-audio crossfade so routine communication lands more naturally.',
     caption: 'Delivery logic adapts to the live audio environment',
-    image: '/assets/intro-slideshow/feature-screenshot-timeline.svg',
+    image: '/assets/intro-slideshow/feature-screenshot-timeline.png',
     imageAlt:
       'ShiftAudio screenshot showing shift timeline, break windows, and scheduled delivery controls',
-    mediaTag: 'ShiftAudio screenshot',
+    mediaTag: 'Screenshot',
     voiceover: '/audio/intro/intro-03.mp3',
   },
   {
@@ -54,12 +54,13 @@ const slides: Slide[] = [
     title: 'Phase music mapping lets the audio bed support the work.',
     body: 'Background audio can be mapped by phase to support focus, recovery, or short push periods, while always staying subordinate to safety messaging.',
     caption: 'Audio control is designed to support pace without competing with safety',
-    image: '/assets/intro-slideshow/feature-screenshot-phase-music.svg',
+    image: '/assets/intro-slideshow/feature-screenshot-phase-music.png',
     imageAlt:
       'ShiftAudio screenshot showing phase music mapping, playlist guidance, and background bed controls',
-    mediaTag: 'ShiftAudio screenshot',
+    mediaTag: 'Screenshot',
     voiceover: '/audio/intro/intro-04.mp3',
   },
+  */
   // {
   //   eyebrow: 'Why It Works',
   //   title: 'Timed delivery. Break-aware. Emergency-first.',
@@ -76,9 +77,9 @@ const slides: Slide[] = [
     title: 'In an emergency, all other audio stops.',
     body: 'When something critical happens, ShiftAudio stops background audio and gives urgent messaging immediate priority.',
     caption: 'Emergency communication overrides the normal audio flow',
-    image: '/assets/intro-slideshow/overview-placeholder.svg',
+    image: '/assets/intro-slideshow/feature-screenshot-emergency.png',
     imageAlt: 'ShiftAudio closing placeholder artwork',
-    mediaTag: 'Closing image',
+    mediaTag: 'Screenshot',
     voiceover: '/audio/intro/intro-06.mp3',
   },
   {
@@ -86,15 +87,16 @@ const slides: Slide[] = [
     title: 'Better compliance. Less disruption. Clearer communication.',
     body: 'The value is simple: clearer communication for teams on the floor and more consistent safety delivery for site leaders.',
     caption: 'Operational value that is easy to see in the workflow',
-    image: '/assets/intro-slideshow/compliance-placeholder.svg',
+    image: '/assets/intro-slideshow/feature-screenshot-logs.png',
     imageAlt: 'Compliance value placeholder artwork',
-    mediaTag: 'Value image',
+    mediaTag: 'Screenshot',
     voiceover: '/audio/intro/intro-07.mp3',
   },
 ]
 
 const isOpen = ref(true)
 const hasStartedAudio = ref(false)
+const isPaused = ref(false)
 const activeIndex = ref(0)
 const autoplayProgress = ref(0)
 let backgroundAudio: HTMLAudioElement | null = null
@@ -102,6 +104,8 @@ let voiceoverAudio: HTMLAudioElement | null = null
 let autoplayTimer: number | null = null
 let autoplayProgressTimer: number | null = null
 const fallbackAutoplayMs = 15000
+let autoplayStartedAt = 0
+let autoplayRemainingMs = fallbackAutoplayMs
 
 const activeSlide = computed(() => slides[activeIndex.value])
 const canGoBack = computed(() => activeIndex.value > 0)
@@ -109,6 +113,7 @@ const canGoForward = computed(() => activeIndex.value < slides.length - 1)
 
 async function startAudioExperience() {
   hasStartedAudio.value = true
+  isPaused.value = false
 
   try {
     await backgroundAudio?.play()
@@ -135,19 +140,27 @@ function startFallbackAutoplay(durationMs = fallbackAutoplayMs) {
 
   if (!canGoForward.value) {
     autoplayProgress.value = 1
+    autoplayRemainingMs = fallbackAutoplayMs
     return
   }
 
-  autoplayProgress.value = 0
+  autoplayRemainingMs = durationMs
+  autoplayStartedAt = Date.now()
+  const progressBase = Math.max(0, Math.min(1, 1 - durationMs / fallbackAutoplayMs))
+  autoplayProgress.value = progressBase
 
-  const startedAt = Date.now()
   autoplayProgressTimer = window.setInterval(() => {
-    const elapsed = Date.now() - startedAt
-    autoplayProgress.value = Math.max(0, Math.min(1, elapsed / durationMs))
+    const elapsed = Date.now() - autoplayStartedAt
+    const progressSpan = Math.max(0, Math.min(1, durationMs / fallbackAutoplayMs))
+    autoplayProgress.value = Math.max(
+      progressBase,
+      Math.min(1, progressBase + (elapsed / durationMs) * progressSpan),
+    )
   }, 100)
 
   autoplayTimer = window.setTimeout(() => {
     autoplayProgress.value = 1
+    autoplayRemainingMs = fallbackAutoplayMs
     stopAutoplayTimers()
     goNext()
   }, durationMs)
@@ -156,12 +169,14 @@ function startFallbackAutoplay(durationMs = fallbackAutoplayMs) {
 async function playVoiceoverForActiveSlide() {
   stopAutoplayTimers()
   autoplayProgress.value = 0
+  autoplayRemainingMs = fallbackAutoplayMs
   voiceoverAudio?.pause()
   if (voiceoverAudio) voiceoverAudio.currentTime = 0
-  startFallbackAutoplay()
 
   const src = activeSlide.value.voiceover
-  if (!src || !isOpen.value || !hasStartedAudio.value) return
+  if (!src || !isOpen.value || !hasStartedAudio.value || isPaused.value) return
+
+  startFallbackAutoplay()
 
   if (!voiceoverAudio) return
 
@@ -174,6 +189,66 @@ async function playVoiceoverForActiveSlide() {
   } catch {
     // If playback is blocked, the timer-based autoplay still keeps the slideshow moving.
   }
+}
+
+function pauseAutoplay() {
+  if (!hasStartedAudio.value || isPaused.value) return
+
+  if (autoplayTimer != null) {
+    autoplayRemainingMs = Math.max(0, autoplayRemainingMs - (Date.now() - autoplayStartedAt))
+  }
+
+  isPaused.value = true
+  stopAutoplayTimers()
+  voiceoverAudio?.pause()
+  backgroundAudio?.pause()
+}
+
+async function resumeAutoplay() {
+  if (!hasStartedAudio.value || !isPaused.value) return
+
+  isPaused.value = false
+
+  try {
+    await backgroundAudio?.play()
+  } catch {
+    // Resume still works without background audio if playback is blocked.
+  }
+
+  try {
+    await voiceoverAudio?.play()
+  } catch {
+    // Timer-based autoplay still resumes even if voiceover playback is blocked.
+  }
+
+  if (canGoForward.value) {
+    startFallbackAutoplay(Math.max(autoplayRemainingMs, 250))
+  } else {
+    autoplayProgress.value = 1
+  }
+}
+
+function togglePause() {
+  if (isPaused.value) {
+    void resumeAutoplay()
+    return
+  }
+
+  pauseAutoplay()
+}
+
+async function replaySlide() {
+  if (!hasStartedAudio.value) return
+
+  isPaused.value = false
+
+  try {
+    await backgroundAudio?.play()
+  } catch {
+    // Replay still proceeds even if background playback is blocked.
+  }
+
+  await playVoiceoverForActiveSlide()
 }
 
 function goToSlide(index: number) {
@@ -194,6 +269,7 @@ function goBack() {
 
 function closeSlideshow() {
   isOpen.value = false
+  isPaused.value = false
   stopAutoplayTimers()
   backgroundAudio?.pause()
   voiceoverAudio?.pause()
@@ -203,7 +279,14 @@ function closeSlideshow() {
 function reopenSlideshow() {
   activeIndex.value = 0
   isOpen.value = true
-  void startAudioExperience()
+  hasStartedAudio.value = false
+  isPaused.value = false
+  autoplayProgress.value = 0
+  autoplayRemainingMs = fallbackAutoplayMs
+  stopAutoplayTimers()
+  backgroundAudio?.pause()
+  voiceoverAudio?.pause()
+  if (voiceoverAudio) voiceoverAudio.currentTime = 0
 }
 
 function startGuide() {
@@ -212,11 +295,20 @@ function startGuide() {
 }
 
 watch(activeIndex, () => {
+  if (!hasStartedAudio.value) {
+    stopAutoplayTimers()
+    autoplayProgress.value = 0
+    voiceoverAudio?.pause()
+    if (voiceoverAudio) voiceoverAudio.currentTime = 0
+    return
+  }
+  isPaused.value = false
   void playVoiceoverForActiveSlide()
 })
 
 watch(isOpen, (open) => {
   if (!open) {
+    isPaused.value = false
     stopAutoplayTimers()
     backgroundAudio?.pause()
     voiceoverAudio?.pause()
@@ -230,10 +322,6 @@ onMounted(() => {
 
   voiceoverAudio = new window.Audio()
   voiceoverAudio.volume = 1
-
-  if (isOpen.value) {
-    void startAudioExperience()
-  }
 })
 
 onBeforeUnmount(() => {
@@ -268,21 +356,64 @@ defineExpose({
 
         <div class="intro-slideshow__content">
           <p class="intro-slideshow__eyebrow">{{ activeSlide.eyebrow }}</p>
-          <h1>{{ activeSlide.title }}</h1>
-          <p class="intro-slideshow__body">{{ activeSlide.body }}</p>
-          <p class="intro-slideshow__caption">{{ activeSlide.caption }}</p>
-
+          <h1 class="intro-slideshow__title">"{{ activeSlide.title }}"</h1>
           <div class="intro-slideshow__meta">
             <span class="chip">Slide {{ activeIndex + 1 }} of {{ slides.length }}</span>
             <!-- <span class="chip">Feature screenshots on key slides</span>
             <span class="chip">Placeholder voiceover + music</span> -->
           </div>
 
-          <div class="intro-slideshow__progress" aria-hidden="true">
-            <div
-              class="intro-slideshow__progress-fill"
-              :style="{ width: `${autoplayProgress * 100}%` }"
-            ></div>
+          <div class="intro-slideshow__progress-row">
+            <div class="intro-slideshow__progress" aria-hidden="true">
+              <div
+                class="intro-slideshow__progress-fill"
+                :style="{ width: `${autoplayProgress * 100}%` }"
+              ></div>
+            </div>
+            <button
+              class="intro-slideshow__pause"
+              type="button"
+              :disabled="!hasStartedAudio"
+              aria-label="Replay slide"
+              title="Replay slide"
+              @click="replaySlide"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="intro-slideshow__pause-icon">
+                <path
+                  d="M12 5a7 7 0 1 1-6.74 8.9 1 1 0 1 1 1.92-.56A5 5 0 1 0 8.38 8H11a1 1 0 1 1 0 2H5.75a.75.75 0 0 1-.75-.75V4a1 1 0 1 1 2 0v2.14A6.96 6.96 0 0 1 12 5Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
+            <button
+              class="intro-slideshow__pause"
+              type="button"
+              :disabled="!hasStartedAudio"
+              :aria-pressed="isPaused"
+              :aria-label="isPaused ? 'Resume autoplay' : 'Pause autoplay'"
+              :title="isPaused ? 'Resume autoplay' : 'Pause autoplay'"
+              @click="togglePause"
+            >
+              <svg
+                v-if="isPaused"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                class="intro-slideshow__pause-icon"
+              >
+                <path d="M8 6.5v11l9-5.5-9-5.5Z" fill="currentColor" />
+              </svg>
+              <svg
+                v-else
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                class="intro-slideshow__pause-icon"
+              >
+                <path
+                  d="M8.5 6.5a1 1 0 0 1 1 1v9a1 1 0 1 1-2 0v-9a1 1 0 0 1 1-1Zm7 0a1 1 0 0 1 1 1v9a1 1 0 1 1-2 0v-9a1 1 0 0 1 1-1Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </button>
           </div>
 
           <div class="intro-slideshow__timeline" aria-label="Slide selector">
@@ -302,16 +433,29 @@ defineExpose({
               Back
             </button>
             <button
+              v-if="activeIndex === 0 && !hasStartedAudio"
+              class="btn intro-slideshow__primary"
+              type="button"
+              @click="startAudioExperience"
+            >
+              Start presentation
+            </button>
+            <button
               v-if="!canGoForward"
-              class="btn"
+              class="btn intro-slideshow__primary"
               type="button"
               @click="startGuide"
             >
               Start walkthrough guide
             </button>
             <!-- <button class="btn" type="button" @click="startAudioExperience">Replay audio</button> -->
-            <button class="btn intro-slideshow__primary" type="button" @click="goNext">
-              {{ canGoForward ? 'Next slide' : 'Launch ShiftAudio' }}
+            <button
+              v-if="canGoForward && (hasStartedAudio || activeIndex !== 0)"
+              class="btn intro-slideshow__primary"
+              type="button"
+              @click="goNext"
+            >
+              Next slide
             </button>
           </div>
         </div>
@@ -378,6 +522,7 @@ defineExpose({
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: left center;
 }
 
 .intro-slideshow__media-tag {
@@ -386,15 +531,16 @@ defineExpose({
   bottom: 24px;
   display: inline-flex;
   align-items: center;
-  padding: 10px 14px;
-  border-radius: 999px;
-  color: var(--text);
-  border: 1px solid var(--border);
-  background: var(--surface-strong);
+  padding: 7px 11px;
+  border-radius: 8px;
+  color: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.48);
+  background: rgba(51, 65, 85, 0.9);
   backdrop-filter: blur(10px);
-  font-size: 0.78rem;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -406,7 +552,7 @@ defineExpose({
   padding: 64px 54px 48px;
   overflow-y: auto;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(249, 250, 252, 0.94);
 }
 
 .intro-slideshow__eyebrow {
@@ -424,16 +570,20 @@ h1 {
   line-height: 0.98;
 }
 
+.intro-slideshow__title {
+  font-style: italic;
+}
+
 .intro-slideshow__body {
   margin: 0;
-  color: var(--muted);
+  color: rgba(15, 23, 42, 0.88);
   font-size: 1.08rem;
-  line-height: 1.7;
+  line-height: 1.5;
 }
 
 .intro-slideshow__caption {
   margin: -6px 0 0;
-  color: rgba(3, 105, 161, 0.88);
+  color: rgba(12, 74, 110, 0.92);
   font-size: 0.92rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -453,11 +603,18 @@ h1 {
 }
 
 .intro-slideshow__progress {
+  flex: 1;
   width: 100%;
-  height: 6px;
+  height: 3px;
   overflow: hidden;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.08);
+}
+
+.intro-slideshow__progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .intro-slideshow__progress-fill {
@@ -466,6 +623,32 @@ h1 {
   border-radius: inherit;
   background: rgba(56, 189, 248, 0.82);
   transition: width 100ms linear;
+}
+
+.intro-slideshow__pause {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  color: var(--text);
+  background: var(--surface-strong);
+  font: inherit;
+  cursor: pointer;
+}
+
+.intro-slideshow__pause:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.intro-slideshow__pause-icon {
+  width: 16px;
+  height: 16px;
 }
 
 .intro-slideshow__timeline {
@@ -500,9 +683,14 @@ h1 {
 }
 
 .intro-slideshow__primary {
-  color: #0f172a;
-  border-color: var(--border);
-  background: var(--surface-strong);
+  color: #fff;
+  border-color: rgba(194, 65, 12, 0.28);
+  background: #ea580c;
+}
+
+.intro-slideshow__primary:hover {
+  border-color: rgba(194, 65, 12, 0.4);
+  background: #c2410c;
 }
 
 .intro-fade-enter-active,
@@ -552,13 +740,13 @@ h1 {
   .intro-slideshow__media-tag {
     left: 12px;
     bottom: 12px;
-    padding: 7px 10px;
-    font-size: 0.68rem;
+    padding: 6px 9px;
+    font-size: 0.64rem;
   }
 
   .intro-slideshow__body {
     font-size: 0.96rem;
-    line-height: 1.55;
+    line-height: 1.42;
   }
 
   .intro-slideshow__caption {
@@ -593,7 +781,21 @@ h1 {
   }
 
   .intro-slideshow__progress {
-    height: 5px;
+    height: 2px;
+  }
+
+  .intro-slideshow__progress-row {
+    gap: 8px;
+  }
+
+  .intro-slideshow__pause {
+    width: 34px;
+    height: 34px;
+  }
+
+  .intro-slideshow__pause-icon {
+    width: 14px;
+    height: 14px;
   }
 }
 </style>

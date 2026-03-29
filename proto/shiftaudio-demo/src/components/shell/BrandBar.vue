@@ -40,6 +40,7 @@ const playingSvg = '/assets/svg/animated.svg'
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.65);
@@ -67,5 +68,28 @@ const playingSvg = '/assets/svg/animated.svg'
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .bar {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 10px 12px;
+  }
+
+  .brand,
+  .right {
+    width: 100%;
+  }
+
+  .right {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .logo {
+    width: 42px;
+  }
 }
 </style>

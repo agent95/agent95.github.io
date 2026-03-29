@@ -131,4 +131,30 @@ function shortTs(iso: string) {
     grid-template-columns: 60px 1fr 110px 80px 80px;
   }
 }
+
+@media (max-width: 640px) {
+  .hdr {
+    display: none;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .t,
+  .p,
+  .d,
+  .r {
+    font-size: 11px;
+  }
+
+  .t {
+    opacity: 0.75;
+  }
+
+  .msg {
+    white-space: normal;
+  }
+}
 </style>

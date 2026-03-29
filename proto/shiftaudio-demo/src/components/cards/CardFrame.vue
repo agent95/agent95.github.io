@@ -54,4 +54,18 @@ defineProps<{ title: string; subtitle?: string }>()
 .body {
   display: block;
 }
+
+@media (max-width: 640px) {
+  .card {
+    padding: 12px;
+  }
+
+  .hdr {
+    flex-wrap: wrap;
+  }
+
+  .actions {
+    width: 100%;
+  }
+}
 </style>

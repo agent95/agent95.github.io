@@ -10,6 +10,7 @@
 <style scoped>
 .app-shell {
   min-height: 100vh;
+  overflow-x: clip;
 }
 
 .brandbar,
@@ -31,5 +32,12 @@
   padding: 18px;
   max-width: 1280px;
   margin: 0 auto;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding: 12px;
+  }
 }
 </style>

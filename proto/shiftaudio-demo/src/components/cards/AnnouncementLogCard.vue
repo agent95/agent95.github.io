@@ -110,4 +110,19 @@ function exportCsv() {
   border: 1px solid rgba(0, 0, 0, 0.18);
   background: rgba(255, 255, 255, 0.9);
 }
+
+@media (max-width: 640px) {
+  .filters {
+    align-items: stretch;
+  }
+
+  .lbl,
+  .search {
+    width: 100%;
+  }
+
+  .search {
+    min-width: 0;
+  }
+}
 </style>

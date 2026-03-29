@@ -135,6 +135,13 @@ function startGuide() {
   showGuide.value = true
 }
 
+function onGuideClose(reason?: 'dismiss' | 'finish') {
+  showGuide.value = false
+  if (reason === 'finish' && shift.started) {
+    shift.stopShift()
+  }
+}
+
 onMounted(() => {
   // demo clock ticks every second = 1 simulated minute (tune as you like)
   if (shift.started) startDemoClock()
@@ -172,7 +179,7 @@ onUnmounted(() => {
 <template>
   <AppShell>
     <LaunchSlideshow ref="launchSlideshow" @start-guide="startGuide" />
-    <GuidedWalkthrough :active="showGuide" :steps="guideSteps" @close="showGuide = false" />
+    <GuidedWalkthrough :active="showGuide" :steps="guideSteps" @close="onGuideClose" />
 
     <template #brandbar>
       <BrandBar />

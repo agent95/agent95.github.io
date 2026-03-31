@@ -109,6 +109,7 @@ function onSegmentClick(phase: (typeof phases)[number], level: number) {
       class="wrap"
       :style="{
         '--graph-h': `${graphHeight}px`,
+        '--graph-top': `${graphTopOffset}px`,
         '--pad-y': `${padYPx}px`,
         '--pad-x': `${padX}%`,
       }"
@@ -166,7 +167,7 @@ function onSegmentClick(phase: (typeof phases)[number], level: number) {
         </span>
       </div>
 
-      <div class="ylabels" :style="{ '--graph-top': `${graphTopOffset}px` }">
+      <div class="ylabels">
         <span
           v-for="f in yLabelData"
           :key="f.label"
@@ -284,8 +285,8 @@ function onSegmentClick(phase: (typeof phases)[number], level: number) {
 .ylabels {
   position: absolute;
   left: 12px;
-  top: 0;
-  height: 100%;
+  top: var(--graph-top);
+  height: var(--graph-h);
   padding-right: 10px;
   background: linear-gradient(
     90deg,

@@ -10,6 +10,8 @@ type WalkthroughStep = {
   panelPosition?: 'auto' | 'top-left' | 'top-right'
   primaryButtonLabel?: string
   primaryButtonVariant?: 'default' | 'start' | 'play' | 'emergency'
+  primaryButtonActive?: boolean
+  primaryButtonDisabled?: boolean
   primaryAction?: () => void | 'stay' | Promise<void | 'stay'>
 }
 
@@ -265,8 +267,10 @@ onBeforeUnmount(() => {
               'is-start': activeStep?.primaryButtonVariant === 'start',
               'is-play': activeStep?.primaryButtonVariant === 'play',
               'is-emergency': activeStep?.primaryButtonVariant === 'emergency',
+              'is-active': activeStep?.primaryButtonActive,
             }"
             type="button"
+            :disabled="activeStep?.primaryButtonDisabled"
             @click="handlePrimaryAction"
           >
             <svg
@@ -417,6 +421,24 @@ p {
   background: rgba(255, 0, 0, 0.16);
 }
 
+.guide__primary.is-emergency.is-active {
+  background: rgba(255, 0, 0, 0.18);
+  border-color: rgba(255, 0, 0, 0.55);
+  animation: guide-emergency-pulse 1.4s infinite;
+}
+
+@keyframes guide-emergency-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(255, 0, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+  }
+}
+
 .guide-fade-enter-active,
 .guide-fade-leave-active {
   transition: opacity 160ms ease;
@@ -431,9 +453,16 @@ p {
   position: relative;
   z-index: 501;
   border-radius: 22px;
+  background: transparent;
   box-shadow:
     0 0 0 3px rgba(56, 189, 248, 0.92),
     0 16px 32px rgba(15, 23, 42, 0.16);
+}
+
+:global([data-guide='phase-music'][data-guide-active='true']) {
+  box-shadow: none;
+  outline: 3px solid rgba(56, 189, 248, 0.92);
+  outline-offset: 6px;
 }
 
 :global([data-guide-scope-active='true']) {
@@ -493,6 +522,12 @@ p {
     box-shadow:
       0 0 0 2px rgba(56, 189, 248, 0.88),
       0 10px 18px rgba(15, 23, 42, 0.1);
+  }
+
+  :global([data-guide='phase-music'][data-guide-active='true']) {
+    box-shadow: none;
+    outline: 2px solid rgba(56, 189, 248, 0.88);
+    outline-offset: 4px;
   }
 }
 </style>

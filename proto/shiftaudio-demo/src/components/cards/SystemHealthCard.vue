@@ -6,6 +6,7 @@ import { useSystemStore } from '@/stores/system'
 
 defineProps<{
   onReplayIntro?: () => void
+  onStartGuide?: () => void
 }>()
 
 const system = useSystemStore()
@@ -27,7 +28,10 @@ async function resetPwaCache() {
       const keys = await caches.keys()
       await Promise.all(keys.map((k) => caches.delete(k)))
     }
-    window.location.reload()
+
+    const nextUrl = new URL(window.location.href)
+    nextUrl.searchParams.delete('intro')
+    window.location.replace(nextUrl.toString())
   } catch (e) {
     console.warn('[PWA] reset failed', e)
   }
@@ -65,6 +69,9 @@ async function resetPwaCache() {
           <span>Intro Loaded</span>
         </div>
         <button class="intro-replay" type="button" @click="onReplayIntro?.()">Replay Intro</button>
+        <button class="guide-launch" type="button" @click="onStartGuide?.()">
+          Guided Walkthrough
+        </button>
       </div>
       <button class="reset" type="button" @click="resetPwaCache">Reset PWA Cache</button>
     </div>
@@ -140,6 +147,7 @@ async function resetPwaCache() {
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
 }
 .intro-replay,
+.guide-launch,
 .reset {
   border: 1px solid rgba(0, 0, 0, 0.18);
   background: rgba(255, 255, 255, 0.9);
@@ -156,10 +164,21 @@ async function resetPwaCache() {
   box-shadow: 0 12px 24px rgba(14, 116, 144, 0.16);
 }
 .intro-replay:hover,
+.guide-launch:hover,
 .reset:hover {
   border-color: rgba(0, 0, 0, 0.3);
 }
 .intro-replay:hover {
   border-color: rgba(14, 116, 144, 0.38);
+}
+
+.guide-launch {
+  border-color: rgba(194, 65, 12, 0.28);
+  color: #7c2d12;
+  background: rgba(255, 237, 213, 0.94);
+}
+
+.guide-launch:hover {
+  border-color: rgba(194, 65, 12, 0.4);
 }
 </style>

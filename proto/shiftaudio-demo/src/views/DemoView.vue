@@ -93,8 +93,15 @@ const guideSteps = computed(() => [
     actionLabel: 'Try this',
     actionBody:
       'Trigger the emergency override to see normal audio yield immediately to urgent messaging.',
-    primaryButtonLabel: ann.emergency.active ? 'End Emergency' : 'Announce Emergency',
+    primaryButtonLabel:
+      ann.emergency.active && ann.activeDeliveries > 0
+        ? 'Emergency Playing...'
+        : ann.emergency.active
+          ? 'End Emergency'
+          : 'Announce Emergency',
     primaryButtonVariant: 'emergency',
+    primaryButtonActive: ann.emergency.active,
+    primaryButtonDisabled: ann.emergency.active && ann.activeDeliveries > 0,
     primaryAction: async () => {
       if (!ann.emergency.active) {
         await ann.triggerEmergency('Emergency Stop')
@@ -110,7 +117,6 @@ const guideSteps = computed(() => [
     actionLabel: 'Look for',
     actionBody:
       'As messages play, check the log to see the delivery mode and result recorded for each event.',
-    panelPosition: 'top-left',
   },
   {
     selector: '[data-guide="system-health"]',
@@ -168,9 +174,6 @@ function startGuide() {
 
 function onGuideClose(reason?: 'dismiss' | 'finish') {
   showGuide.value = false
-  if (reason === 'finish' && shift.started) {
-    shift.stopShift()
-  }
 }
 
 onMounted(() => {
@@ -235,7 +238,7 @@ onUnmounted(() => {
           <EmergencyOverrideCard />
         </div>
         <div data-guide="system-health">
-          <SystemHealthCard :on-replay-intro="replayDemoView" />
+          <SystemHealthCard :on-replay-intro="replayDemoView" :on-start-guide="startGuide" />
         </div>
         <!-- <DebugPanel /> -->
         <ComplianceNoticeCard />

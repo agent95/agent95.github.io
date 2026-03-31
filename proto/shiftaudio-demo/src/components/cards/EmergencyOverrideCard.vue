@@ -8,7 +8,7 @@ import { useSystemStore } from '@/stores/system'
 
 const ann = useAnnouncementsStore()
 const system = useSystemStore()
-const { emergency } = storeToRefs(ann)
+const { emergency, activeDeliveries } = storeToRefs(ann)
 
 const isBusy = ref(false)
 const lastError = ref<string>('')
@@ -19,6 +19,7 @@ const zoneLabel = computed(() => {
 
 async function onEmergencyClick() {
   if (isBusy.value) return
+  if (emergency.value.active && activeDeliveries.value > 0) return
   isBusy.value = true
   lastError.value = ''
 
@@ -42,10 +43,11 @@ async function onEmergencyClick() {
     <button
       class="btn btn-danger"
       :class="{ active: emergency.active }"
-      :disabled="isBusy"
+      :disabled="isBusy || (emergency.active && activeDeliveries > 0)"
       @click="onEmergencyClick"
     >
       <span v-if="isBusy">SENDING…</span>
+      <span v-else-if="emergency.active && activeDeliveries > 0">EMERGENCY PLAYING…</span>
       <span v-else>
         {{ emergency.active ? 'END EMERGENCY' : 'ANNOUNCE EMERGENCY' }}
       </span>
